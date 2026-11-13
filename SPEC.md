@@ -42,8 +42,8 @@ One JSON file per match, from the point of view of one player:
 ## 2. Detector: isolated_opening_death
 
 - **Trigger (per round):** the player is the first death on their own team, AND the nearest
-  living teammate is further than `ISOLATION_DISTANCE` (900 units), AND the killer is not
-  killed by the player's team within `TRADE_WINDOW` (5 s).
+  living teammate is further than `ISOLATION_DISTANCE` (900 units), AND the death is an enemy
+  kill (not a suicide, world damage or team kill), AND the death was not traded (2c).
 - **Grouping:** by (map, side, place).
 - **Minimum sample:** at least `MIN_SIDE_ROUNDS` (30) rounds in the map-side cell; the pattern
   must fire in at least `MIN_PATTERN_ROUNDS` (4) rounds across at least
@@ -57,13 +57,21 @@ One JSON file per match, from the point of view of one player:
 ## 2b. Detector: untraded_death
 
 - **Trigger (per round):** the player dies to an enemy, at least one teammate is still alive,
-  and the killer is not killed by the player's team within `TRADE_WINDOW` (5 s).
+  and the death was not traded (2c).
   Excluded: last-alive deaths, suicides/world damage, team kills.
 - **Grouping / minimum sample / metric:** same as section 2.
 - **Impact score:** same formula, but the comparison is only the other rounds the player
   died in (surviving rounds would flatter the comparison).
 - **Known weakness:** on the first 4 real demos 34 of 46 deaths were untraded, so the trigger
   alone is a weak discriminator; the location grouping does most of the work.
+
+## 2c. Shared rules (`detectors/common.py`)
+
+- **Enemy kill:** attacker is not `world`, not the victim, and `attacker_side != victim_side`.
+- **Traded:** within `TRADE_WINDOW` (5 s) after the death, the killer is killed by a player on
+  the victim's side (`attacker_side == victim_side`, attacker not `world`). The killer dying to
+  world damage, their own team or themselves is not a trade. A kill with no `attacker_side` is
+  never a trade, so match files must carry `attacker_side` (the parser always writes it).
 
 ## 3. Ranking and output
 

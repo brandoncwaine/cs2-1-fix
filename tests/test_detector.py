@@ -51,3 +51,23 @@ def test_other_players_death_ignored():
 
 def test_missing_place_becomes_unknown():
     assert events([rnd(1, kills=[death(place=None)])])[0].place == "unknown"
+
+
+def test_suicide_world_and_team_kill_opening_deaths_excluded():
+    assert events([rnd(1, kills=[death(attacker="world")])]) == []
+    assert events([rnd(1, kills=[death(attacker=ME, attacker_side="T")])]) == []
+    assert events([rnd(1, kills=[death(attacker=MATE, attacker_side="T")])]) == []
+
+
+def test_killer_dying_to_own_team_or_world_is_not_a_trade():
+    for not_trade in (
+        death(t=22.0, victim=ENEMY, attacker="enemy2", side="CT", attacker_side="CT"),
+        death(t=22.0, victim=ENEMY, attacker="world", side="CT", attacker_side=None),
+        death(t=22.0, victim=ENEMY, attacker=ENEMY, side="CT", attacker_side="CT"),
+    ):
+        assert len(events([rnd(1, kills=[death(t=20.0), not_trade])])) == 1
+
+
+def test_kill_without_attacker_side_never_counts_as_trade():
+    trade = {**death(t=22.0, victim=ENEMY, attacker=MATE, side="CT"), "attacker_side": None}
+    assert len(events([rnd(1, kills=[death(t=20.0), trade])])) == 1

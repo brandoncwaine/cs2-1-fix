@@ -63,3 +63,16 @@ def test_no_card_when_other_death_rounds_are_lost_too():
     # Survived rounds are all wins, but they must not count as the comparison.
     (card,) = cards.build_cards(_halves(died_other_won=False), ME)
     assert card["status"] == "no_fix_found"
+
+
+def test_killer_dying_to_own_team_or_world_is_not_a_trade():
+    for not_trade in (
+        death(t=22.0, victim=ENEMY, attacker="enemy2", side="CT", attacker_side="CT"),
+        death(t=22.0, victim=ENEMY, attacker="world", side="CT", attacker_side=None),
+    ):
+        assert len(events([rnd(1, kills=[death(t=20.0, mates=NEAR), not_trade])])) == 1
+
+
+def test_both_detectors_share_one_trade_rule():
+    from onefix.detectors import common, isolated_opening_death as iod
+    assert ud.TRADE_WINDOW == iod.TRADE_WINDOW == common.TRADE_WINDOW

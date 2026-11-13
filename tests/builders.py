@@ -4,8 +4,15 @@ FAR = [[5000, 0, 0]]
 NEAR = [[300, 0, 0]]
 
 
-def death(t=20.0, victim=ME, attacker=ENEMY, side="T", place="Palace", mates=FAR):
+def other(side):
+    return "CT" if side == "T" else "T"
+
+
+def death(t=20.0, victim=ME, attacker=ENEMY, side="T", place="Palace", mates=FAR,
+          attacker_side=None):
+    """`side` is the victim's side; the attacker is on the other side unless given."""
     return {"t": t, "attacker": attacker, "victim": victim, "victim_side": side,
+            "attacker_side": attacker_side or other(side),
             "place": place, "pos": [0, 0, 0], "victim_teammates_alive": mates}
 
 

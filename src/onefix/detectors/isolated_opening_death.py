@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 
+from onefix.detectors.common import TRADE_WINDOW, Event, is_enemy_kill, was_traded
 from onefix.models import Kill, Match, Round
+
+__all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
 
 NAME = "isolated_opening_death"
 
-# Provisional thresholds. Not yet validated against real demos.
+# Provisional threshold. Not yet validated against real demos.
 ISOLATION_DISTANCE = 900.0  # game units to nearest living teammate
-TRADE_WINDOW = 5.0  # seconds
 
 METRIC_NAME = "isolated_opening_deaths_per_100_side_rounds"
 COMPARISON = "the others"
@@ -33,29 +34,10 @@ def comparison_round(rnd: Round, steamid: str) -> bool:
     return True
 
 
-@dataclass(frozen=True)
-class Event:
-    match_id: str
-    date: str
-    map: str
-    side: str
-    round: int
-    t: float
-    place: str
-    won: bool
-
-
 def _nearest_teammate(kill: Kill) -> float:
     if not kill.victim_teammates_alive:
         return math.inf
     return min(math.dist(kill.pos, p) for p in kill.victim_teammates_alive)
-
-
-def _was_traded(rnd: Round, death: Kill) -> bool:
-    return any(
-        k.victim == death.attacker and death.t < k.t <= death.t + TRADE_WINDOW
-        for k in rnd.kills
-    )
 
 
 def fires(rnd: Round, steamid: str) -> Kill | None:
@@ -67,9 +49,11 @@ def fires(rnd: Round, steamid: str) -> Kill | None:
     if not team_deaths or team_deaths[0].victim != steamid:
         return None
     death = team_deaths[0]
+    if not is_enemy_kill(death):
+        return None  # suicide, fall, bomb or team kill
     if _nearest_teammate(death) <= ISOLATION_DISTANCE:
         return None
-    if _was_traded(rnd, death):
+    if was_traded(rnd, death):
         return None
     return death
 

@@ -1,13 +1,12 @@
 """Detector: untraded_death. See SPEC.md section 2b. Deterministic; no I/O."""
 from __future__ import annotations
 
-from onefix.detectors.isolated_opening_death import Event
+from onefix.detectors.common import TRADE_WINDOW, Event, is_enemy_kill, was_traded
 from onefix.models import Kill, Match, Round
 
-NAME = "untraded_death"
+__all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
 
-# Provisional threshold. Not yet validated against real demos.
-TRADE_WINDOW = 5.0  # seconds
+NAME = "untraded_death"
 
 METRIC_NAME = "untraded_deaths_per_100_side_rounds"
 COMPARISON = "the other rounds you died in"
@@ -41,14 +40,11 @@ def fires(rnd: Round, steamid: str) -> Kill | None:
     death = _my_death(rnd, steamid)
     if death is None:
         return None
-    if death.attacker in ("world", steamid) or death.attacker_side == death.victim_side:
+    if not is_enemy_kill(death):
         return None  # suicide, fall, bomb or team kill
     if not death.victim_teammates_alive:
         return None  # last alive: nobody could trade
-    if any(
-        k.victim == death.attacker and death.t < k.t <= death.t + TRADE_WINDOW
-        for k in rnd.kills
-    ):
+    if was_traded(rnd, death):
         return None
     return death
 
