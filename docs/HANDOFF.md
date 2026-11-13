@@ -6,7 +6,8 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 - `models.py`: normalised match schema. `parse_demo.py`: .dem -> that schema via demoparser2.
 - Detectors: `isolated_opening_death`, `untraded_death`. `cards.py`: one card per map-side, re-check.
 - Confidence gate (SPEC 3a): one-sided Fisher exact test, Bonferroni over patterns tested per cell.
-- 41 tests pass, all on synthetic data (`tests/builders.py`). `parse_demo.py` has no tests.
+- 48 tests pass. 41 on synthetic data (`tests/builders.py`); 7 parser tests on a public HLTV
+  demo kept outside git (`tests/test_parse_demo.py`, skipped if the demo is missing).
 - Environment: system Python is 3.9, too old. Use the project venv (Python 3.12, gitignored):
   `.venv/bin/python -m pytest`. `demoparser2` is installed there too.
 
@@ -24,19 +25,27 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
   after roughly 11-12 Mirage matches. That is a projection, not a finding.
 - Pending: Brandon to watch the four Palace rounds and say whether the habit is real.
 
+## What pro demos showed (Bluejays, 4 Mirage maps from Hugging Face, 76 rounds per player)
+- Parser works on HLTV GOTV demos. Each has a junk `round_end` at tick 6 (no winner) before
+  round 1; the parser already skips it. Round timer confirms TICKRATE = 64.
+- All 5 players: `no_fix_found` on both sides (best p = 0.365). 4 matches is too few, as expected.
+- `untraded_death` fires on 50-72% of deaths for pros too: confirms it is a weak discriminator.
+- `isolated_opening_death`: 0-3 events per player in 76 rounds. Rare in pro play as well.
+
 ## Known problems, in priority order
 1. All thresholds are unvalidated guesses (900 units, 5 s trade window, target = half baseline,
    ALPHA = 0.05). The gate treats rounds as independent, which they are not.
 2. `rounds_cost` uses a different comparison set per detector, so cross-detector ranking is approximate.
 3. `untraded_death` needs better exclusions (e.g. deaths after the round is effectively lost).
-4. Parser: no tests; tick rate hard-coded to 64; match date is empty (sorted by match id in file name).
+4. Parser: tick rate hard-coded to 64 (checked on one demo, not read from the file); match date
+   is empty (sorted by match id in file name); split demos (`-p1`/`-p2`) would load as two matches.
 
 Fixed: both detectors now share the enemy-kill and trade rules (`detectors/common.py`, SPEC 2c).
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Suggested next steps
-- Add parser tests using a small real demo kept outside git.
-- Get more demos: 4 matches cannot produce a card that passes the gate.
+- Get more demos on one map for one player: 4 matches cannot produce a card that passes the gate.
+  Needs HLTV downloads by hand (about 12-15 maps of one team on one map).
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
 
 ## Local data

@@ -20,7 +20,7 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 
 ## Layout
 - `src/onefix/models.py`   normalised match schema (parser-independent)
-- `src/onefix/parse_demo.py` .dem -> normalised match JSON (no automated tests yet)
+- `src/onefix/parse_demo.py` .dem -> normalised match JSON (tests need a real demo; see tests/test_parse_demo.py)
 - `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`); shared trade rules in `common.py`
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
 - `SPEC.md`                detector catalogue and formats

@@ -112,7 +112,7 @@ Given a fix card and newer matches: `fixed` (rate <= target), `improving` (rate 
 
 ## 5. Not built yet
 
-- Demo parser adapter exists (`parse_demo.py`, demoparser2) and ran on 4 real Premier demos, but has no automated tests yet.
+- Demo parser adapter (`parse_demo.py`, demoparser2) is tested only against one public HLTV demo kept outside git (`tests/test_parse_demo.py`).
 - LLM write-up step. Cards currently use the templates directly.
 - More detectors. Benchmarks from a demo corpus.
 - Any UI.
