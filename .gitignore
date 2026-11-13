@@ -4,3 +4,4 @@ __pycache__/
 *.dem.info
 parsed/
 .venv/
+docs/LOCAL.md
