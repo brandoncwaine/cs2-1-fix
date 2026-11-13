@@ -1,0 +1,119 @@
+{
+ "match_id": "synthetic-2",
+ "map": "de_mirage",
+ "date": "2026-11-02",
+ "rounds": [
+  {
+   "num": 1,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 2,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 3,
+   "side": "T",
+   "won": false,
+   "kills": [
+    {
+     "t": 20.0,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "place": "Palace",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       5000,
+       0,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "num": 4,
+   "side": "T",
+   "won": false,
+   "kills": [
+    {
+     "t": 20.0,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "place": "Palace",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       5000,
+       0,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "num": 5,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 6,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 7,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 8,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 9,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 10,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 11,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 12,
+   "side": "T",
+   "won": true,
+   "kills": []
+  }
+ ]
+}
