@@ -8,16 +8,20 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - The LLM (later) only rewrites card text. It never adds tactical claims. Every claim links to rounds.
 - One fix per map and side. Below minimum sample: say "insufficient_data", never guess.
 - No Valve / Counter-Strike logos or implied affiliation.
-- Decisions live in DECISIONS.md (Claude Project). Do not re-argue them silently.
+- Decisions live in DECISIONS.md. Do not re-argue them silently. Current state and known problems: docs/HANDOFF.md.
 
 ## Stack
-- Python 3.11+, stdlib only in `src/onefix` (parser adapter will add demoparser2 or awpy later).
+- Python 3.11+, stdlib only in `src/onefix`, except `parse_demo.py`, which needs demoparser2.
+- Use the project venv (`.venv`, Python 3.12; system Python is 3.9). `python` below means `.venv/bin/python`.
 - Tests: `python -m pytest` from repo root.
 - CLI: `PYTHONPATH=src python -m onefix.cli --steamid <id> fixtures/*.json`
+- Parse demos: `PYTHONPATH=src python -m onefix.parse_demo --steamid <id> --out parsed demos/*.dem`
+- Never commit `.dem` files or `parsed/` output: they contain other players' Steam IDs.
 
 ## Layout
 - `src/onefix/models.py`   normalised match schema (parser-independent)
-- `src/onefix/detectors/`  one file per detector
+- `src/onefix/parse_demo.py` .dem -> normalised match JSON (no automated tests yet)
+- `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`)
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
 - `SPEC.md`                detector catalogue and formats
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from math import comb
 
 from onefix.detectors import isolated_opening_death, untraded_death
 from onefix.models import Match
@@ -14,6 +15,8 @@ MIN_PATTERN_MATCHES = 2
 MIN_RECHECK_ROUNDS = 20
 EVIDENCE_LIMIT = 3
 METRIC_WINDOW_MATCHES = 3
+# Confidence gate (SPEC.md section 3a). Family-wise error rate per map-side cell.
+ALPHA = 0.05
 
 
 def _pct(wins: int, total: int) -> float:
@@ -24,8 +27,37 @@ def _rate(fired: int, rounds: int) -> float:
     return round(100.0 * fired / rounds, 1) if rounds else 0.0
 
 
+def _sig(x: float) -> float:
+    return float(f"{x:.3g}")
+
+
+def fisher_lower_p(fired_wins: int, fired: int, other_wins: int, other: int) -> float:
+    """One-sided Fisher exact test: the chance that the fired rounds would have
+    `fired_wins` or fewer wins if they were a random draw from all the rounds
+    (fired + other) with the same total wins. Small p = fewer wins than chance explains."""
+    total, wins = fired + other, fired_wins + other_wins
+    tail = sum(comb(wins, k) * comb(total - wins, fired - k) for k in range(fired_wins + 1))
+    return tail / comb(total, fired)
+
+
+def pick_fix(tested: list[dict]) -> tuple[dict | None, float]:
+    """Best pattern in one map-side cell that passes the confidence gate.
+
+    `tested` is every pattern that reached the minimum sample in the cell. The
+    threshold is Bonferroni-corrected by that count, because we pick the best of
+    several patterns. Returns (pattern or None, threshold)."""
+    if not tested:
+        return None, ALPHA
+    threshold = ALPHA / len(tested)
+    passing = [c for c in tested if c["rounds_cost"] > 0 and c["p_value"] <= threshold]
+    passing.sort(key=lambda c: (-c["rounds_cost"], -c["fired"], c["detector"], c["place"]))
+    return (passing[0] if passing else None), threshold
+
+
 def find_candidates(matches: list[Match], steamid: str) -> dict[tuple[str, str], list[dict]]:
-    """All patterns that pass the minimum sample, per (map, side), best first."""
+    """Every pattern that reaches the minimum sample, per (map, side), highest cost first.
+
+    Includes patterns with no observed cost: they still count as tested for the gate."""
     out: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for det in DETECTORS.values():
         events = defaultdict(list)
@@ -46,12 +78,11 @@ def find_candidates(matches: list[Match], steamid: str) -> dict[tuple[str, str],
                 continue
             fired_wins = sum(e.won for e in es)
             rounds_cost = fired * (sum(others) / len(others) - fired_wins / fired)
-            if rounds_cost <= 0:
-                continue
             out[(map_, side)].append(
                 {"detector": det.NAME, "place": place, "events": es, "fired": fired,
                  "fired_wins": fired_wins, "other": len(others), "other_wins": sum(others),
-                 "rounds_cost": rounds_cost}
+                 "rounds_cost": rounds_cost,
+                 "p_value": fisher_lower_p(fired_wins, fired, sum(others), len(others))}
             )
     for cs in out.values():
         cs.sort(key=lambda c: (-c["rounds_cost"], -c["fired"], c["detector"], c["place"]))
@@ -74,14 +105,26 @@ def build_cards(matches: list[Match], steamid: str) -> list[dict]:
             cards.append({**base, "status": "insufficient_data",
                           "reason": f"{n} rounds played; need {MIN_SIDE_ROUNDS}.",
                           "rounds_needed": MIN_SIDE_ROUNDS - n})
-        elif not candidates[(map_, side)]:
-            cards.append({**base, "status": "no_fix_found"})
+            continue
+        tested = candidates[(map_, side)]
+        best, threshold = pick_fix(tested)
+        if best is not None:
+            cards.append({**base, **_fix_card(map_, side, n, best, len(tested), threshold)})
+        elif not tested:
+            cards.append({**base, "status": "no_fix_found", "patterns_tested": 0,
+                          "reason": f"No pattern repeated in {MIN_PATTERN_ROUNDS}+ rounds "
+                                    f"across {MIN_PATTERN_MATCHES}+ matches."})
         else:
-            cards.append({**base, **_fix_card(map_, side, n, candidates[(map_, side)][0])})
+            costly = [c["p_value"] for c in tested if c["rounds_cost"] > 0]
+            detail = (f"smallest p = {_sig(min(costly))}, needed <= {_sig(threshold)}"
+                      if costly else "none showed fewer wins than the comparison rounds")
+            cards.append({**base, "status": "no_fix_found", "patterns_tested": len(tested),
+                          "reason": f"{len(tested)} pattern(s) repeated enough, but none "
+                                    f"passed the confidence gate ({detail})."})
     return cards
 
 
-def _fix_card(map_: str, side: str, n: int, c: dict) -> dict:
+def _fix_card(map_: str, side: str, n: int, c: dict, tested: int, threshold: float) -> dict:
     det = DETECTORS[c["detector"]]
     wr_fired = _pct(c["fired_wins"], c["fired"])
     wr_other = _pct(c["other_wins"], c["other"])
@@ -113,6 +156,9 @@ def _fix_card(map_: str, side: str, n: int, c: dict) -> dict:
             "win_rate_other_pct": wr_other,
             "comparison_rounds": c["other"],
             "rounds_cost": round(c["rounds_cost"], 2),
+            "p_value": _sig(c["p_value"]),
+            "p_threshold": _sig(threshold),
+            "patterns_tested": tested,
             "note": "Observed difference for this player, not a causal estimate.",
         },
     }

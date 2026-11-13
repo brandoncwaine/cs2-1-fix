@@ -69,10 +69,31 @@ One JSON file per match, from the point of view of one player:
 
 Per map-side cell, exactly one card:
 
-- `status: "fix"` — the candidate with the highest `rounds_cost` across all detectors (ties: more rounds, then detector, then place name).
+- `status: "fix"` — among patterns that pass the confidence gate (3a), the one with the highest
+  `rounds_cost` across all detectors (ties: more rounds, then detector, then place name).
   `rounds_cost` uses a different comparison per detector, so cross-detector ranking is approximate.
 - `status: "insufficient_data"` — fewer than `MIN_SIDE_ROUNDS` rounds. States how many more are needed.
-- `status: "no_fix_found"` — enough rounds, but no pattern passed the minimum sample.
+- `status: "no_fix_found"` — enough rounds, but no pattern passed the minimum sample, or none
+  passed the confidence gate. Carries `patterns_tested` and a `reason` (with the smallest p-value
+  and the threshold it needed when the gate was the blocker).
+
+## 3a. Confidence gate
+
+Every pattern (detector, place) that reaches the minimum sample in a cell is *tested*, whether
+or not it shows a cost. For each:
+
+- **p-value:** one-sided Fisher exact test on the 2x2 table (fired rounds: wins/losses vs
+  comparison rounds: wins/losses). It is the chance the fired rounds would have this few wins or
+  fewer if they were a random draw from all of those rounds. Stdlib `math.comb`, deterministic.
+- **Threshold:** `ALPHA / patterns_tested` (Bonferroni), `ALPHA = 0.05`. We pick the best of
+  several patterns, so the threshold tightens with how many we looked at.
+- **Pass:** `rounds_cost > 0` and `p <= threshold`.
+
+Fix cards report `p_value`, `p_threshold` and `patterns_tested` in `stats`.
+
+Known limits: rounds are treated as independent (they are not: economy and momentum carry over
+within a match); Bonferroni counts only patterns that reached the minimum sample, not every
+place looked at; `ALPHA` is a convention, not validated against coach labels.
 
 Evidence: up to 3 most recent fired rounds as `{match_id, round, t, place}`.
 
@@ -85,6 +106,5 @@ Given a fix card and newer matches: `fixed` (rate <= target), `improving` (rate 
 
 - Demo parser adapter exists (`parse_demo.py`, demoparser2) and ran on 4 real Premier demos, but has no automated tests yet.
 - LLM write-up step. Cards currently use the templates directly.
-- A statistical-confidence gate (current minimums let through patterns that could be chance).
 - More detectors. Benchmarks from a demo corpus.
 - Any UI.
