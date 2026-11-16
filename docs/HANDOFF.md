@@ -78,6 +78,35 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - The outnumbered exclusion came from pro data: confirm it on target-skill demos.
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
 
+## Notes for building a UI (16 Nov 2026)
+- **Input is the card JSON** from `onefix.cli` (built in `src/onefix/cards.py`; formats in SPEC 3).
+  One card per (map, side), three statuses:
+  - `fix`: `detector`, `place`, `fix_text`, `drill`, `evidence[] {match_id, round, t, place}`,
+    `metric {name, baseline, target, window_matches}`, `stats {fired_rounds,
+    matches_with_pattern, win_rate_fired_pct, win_rate_other_pct, comparison_rounds,
+    rounds_cost, p_value, p_threshold, patterns_tested, note}`.
+  - `insufficient_data`: `reason`, `rounds_needed`.
+  - `no_fix_found`: `patterns_tested`, `reason`.
+  `cards.recheck()` (fixed / improving / no_change / insufficient_data) exists but is not in
+  the CLI output yet.
+- **Design for "no fix" as the normal state.** Every real player so far (Brandon, 10 pros)
+  gets only `insufficient_data` / `no_fix_found`. Show progress honestly (rounds needed per
+  map-side). Never invent or soften a card to fill the screen (D3).
+- **Example fix card**: `PYTHONPATH=src python -m onefix.cli --steamid me fixtures/*.json`
+  (synthetic data, clearly not real).
+- **Rules that bind the UI**: every claim links to its evidence rounds (D2); one card per map
+  and side (D3, reaffirmed); no Valve / Counter-Strike logos or implied affiliation (D4);
+  `stats.note` says the cost is observed, not causal: keep that framing.
+- **Where the data lives**: the Railway cron writes `/data/cards.json` on a volume attached to
+  the cron service only. A Railway volume mounts on one service, so a separate web service
+  cannot read it. Pick deliberately: write cards to a database/bucket the UI reads, or serve
+  the UI from the same service. Changing the cron service is shared infrastructure: check
+  with Brandon first.
+- **Privacy**: parsed match JSON contains other players' Steam IDs; show only the analysed
+  player's data, and keep the repo free of real parsed output (it is public).
+- Brandon's global preference: verify UI work by rendering it (headless Chrome screenshot),
+  not by reasoning about CSS.
+
 ## Local data
 - Demos are not in git. Paths and Brandon's steamid64 are in `docs/LOCAL.md` (gitignored;
   the repo is public).
