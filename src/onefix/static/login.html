@@ -16,64 +16,34 @@
 
 <main>
 <section class="hero">
-  <div class="hero-text">
-    <h1>One thing to fix per map and side, from your own CS2 matches</h1>
-    <p class="hero-sub">One-Fix reads your match demos after the game and looks for a habit that keeps
-    costing you rounds. When it finds one, you get one card: the rounds to watch, a drill, and a
-    number to beat.</p>
-    <!--ERROR-->
-    <a class="button primary cta" href="/auth/steam">Sign in through Steam</a>
-    <p class="cta-note muted">You need an invite code to join. You sign in on Steam's own site, so this
-    site never sees your password.</p>
-  </div>
+  <h1>One thing to fix per map and side</h1>
+  <p class="hero-sub">Found in your own CS2 matches, after the game.</p>
+  <!--ERROR-->
+  <a class="button primary cta" href="/auth/steam">Sign in through Steam</a>
+  <p class="cta-note muted">Invite only. This site never sees your password.</p>
+</section>
 
-  <figure class="sample">
-    <figcaption><span class="tag">Sample card</span> Made-up matches, to show the layout</figcaption>
-    <article class="card fix">
-      <div class="card-head"><span class="side T">T side</span><span class="rounds">72 rounds</span></div>
-      <h2 class="card-title">Isolated opening deaths at Palace</h2>
-      <p class="lead">On de_mirage T side you were the first on your team to die at Palace in 8 of 72
-      rounds, with no teammate close enough to trade. Your team won 12.5% of those rounds and 59.4% of
-      the others. Stop taking first contact at Palace alone: wait for a teammate in trade range or a
-      flash before you peek.</p>
-      <p class="label">Drill</p>
-      <p>For your next 3 de_mirage games: before first contact at Palace, check the radar for a
-      teammate in trade range. If there is none, hold the angle instead of peeking.</p>
-      <p class="label">Target</p>
-      <div class="metric"><b>11.1</b><span class="arrow" aria-hidden="true">→</span><span class="visually-hidden">down to</span><b class="goal">5.5</b>
-        <span class="muted">per 100 T rounds, over your next 3 matches</span></div>
-      <p class="label">Rounds to watch</p>
-      <ul class="evidence">
-        <li><span>Round 2, 0:23 in</span><span class="match">sample-6</span></li>
-        <li><span>Round 11, 0:25 in</span><span class="match">sample-5</span></li>
-        <li><span>Round 4, 0:15 in</span><span class="match">sample-5</span></li>
-      </ul>
-    </article>
-  </figure>
+<section class="video" aria-label="How it works video">
+  <div class="video-frame">
+    <span class="play" aria-hidden="true"></span>
+    <p>Video coming soon</p>
+  </div>
 </section>
 
 <section class="band">
   <h2>How it works</h2>
   <ol class="steps">
-    <li><b>Sign in through Steam.</b> Steam tells this site which account you are, and nothing else.</li>
-    <li><b>Connect your matches.</b> Enter your invite code and two codes from Steam's match history
-    page: an authentication code and the share code of a recent match. The site checks them with Steam
-    before saving.</li>
-    <li><b>Play as usual.</b> Once a day the site fetches the demos of your new matchmaking games and
-    reads them. Nothing runs while you play.</li>
-    <li><b>Open your cards.</b> One card per map and side. Each claim on it links to the rounds it
-    was counted from, so you can watch them yourself.</li>
+    <li><b>Sign in through Steam</b></li>
+    <li><b>Add your invite code and two Steam codes</b></li>
+    <li><b>Play as usual.</b> New matches are read once a day.</li>
+    <li><b>Open your cards.</b> Every claim links to the rounds behind it.</li>
   </ol>
 </section>
 
 <section class="band">
-  <h2>What to expect at first</h2>
+  <h2>What to expect</h2>
   <div>
-    <p>A side of a map is analysed once you have played 30 rounds on it, which is about three matches.
-    Until then its card shows how many rounds are left.</p>
-    <p>After that, most sides say “No fix found”. A fix appears only when the same thing happens in
-    at least 4 rounds across 2 or more matches and the lost rounds are unlikely to be luck. When the
-    data is thin the site says so and does not guess.</p>
+    <p>A side is analysed after 30 rounds. Most sides start with no fix: the site does not guess.</p>
     <div class="cells states">
       <article class="card">
         <div class="card-head"><span class="side CT">CT side</span><span class="rounds">12 rounds</span></div>
@@ -87,53 +57,44 @@
         <p class="reason">2 pattern(s) repeated enough, but none passed the confidence gate (smallest p = 0.237, needed &lt;= 0.025).</p>
       </article>
     </div>
-    <p class="muted small">Sample cards. These are the two states most sides show early on.</p>
-    <a class="button primary cta" href="/auth/steam">Sign in through Steam</a>
-    <p class="cta-note muted">Your first sync starts as soon as your codes are accepted and takes a few
-    minutes per match.</p>
+    <p class="muted small">Sample cards.</p>
   </div>
 </section>
 
 <section class="band">
-  <h2>Before you sign in</h2>
+  <h2>Questions</h2>
   <div class="faq">
     <details>
       <summary>Does this site see my Steam password?</summary>
-      <p>No. You type it on Steam's own site and Steam only passes back which account you are. This
-      site never asks for a password.</p>
+      <p>No. You sign in on Steam's own site.</p>
     </details>
     <details>
       <summary>What can the two codes do?</summary>
-      <p>They let the site read your list of matches so it can fetch the demos. They cannot sign in to
-      your account, trade or change anything. Making a new authentication code on Steam cuts off access.</p>
+      <p>Only read your match list. A new code on Steam cuts off access.</p>
     </details>
     <details>
       <summary>Who can see my cards?</summary>
-      <p>You, and the site owner, who checks with each player whether their card is right. Other
-      invited players cannot see them.</p>
+      <p>You and the site owner. Other players cannot.</p>
     </details>
     <details>
       <summary>Can I delete my data?</summary>
-      <p>Yes. “Delete my data” on your page removes your matches, cards and codes.</p>
+      <p>Yes, at any time, from your page.</p>
     </details>
     <details>
       <summary>Does anything run during a match?</summary>
-      <p>No. There is no overlay and nothing reads your screen or touches the game. The site only
-      reads the demo file after the match is over.</p>
+      <p>No. No overlay; it only reads the demo afterwards.</p>
     </details>
     <details>
       <summary>Which matches count?</summary>
-      <p>Matchmaking games that appear in your Steam match history, starting after the share code you
-      enter. Steam removes old demos after a few weeks, so matches older than that cannot be read.</p>
+      <p>Matchmaking games in your Steam match history, from the last few weeks.</p>
     </details>
   </div>
 </section>
 
 <section class="final">
   <h2>See what your own matches say</h2>
-  <p class="muted">One card per map and side, or an honest “not enough rounds yet”.</p>
   <a class="button primary cta" href="/auth/steam">Sign in through Steam</a>
-  <p class="cta-note muted">Invite only. You can delete your data at any time.</p>
+  <p class="cta-note muted">Invite only.</p>
 </section>
 </main>
 

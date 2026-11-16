@@ -93,28 +93,11 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   variables at start-up; flag `owner_imported` in `onefix.db`). After that `STEAM_MATCH_AUTH_CODE`,
   `ONEFIX_FIRST_SHARE_CODE` and `ONEFIX_PLAYER_NAME` are ignored; `ONEFIX_STEAMID` still says who
   the owner is. The owner needs no invite code and does not count against a full site.
-- `/login` is now a landing page for invited people (16 Nov 2026): what the tool does, a sample fix
-  card (the output for `fixtures/`, labelled as made-up; regenerate with `scripts/make_fixtures.py`
-  and copy the numbers across if the card text changes), how joining works, what to expect
-  at first, and one action repeated three times: "Sign in through Steam". Still `noindex`.
-- Signed-in page, as of 16 Nov 2026 (`src/onefix/static/app.js`, `app.css`, no framework, no build):
-  - "Update my codes", "Delete my data" and the owner's "Remove this person" are modal windows
-    (native `<dialog>`, `openModal` / `confirmModal`). Esc, the backdrop and Cancel close them;
-    Cancel has the focus in the delete modals. The first-time join form is still a full page.
-  - Both buttons show for anyone in the database, the owner included (`me.invited` in `/api/data`).
-  - Entrance animations (cards rise in turn, progress bars fill) play only when the view changes:
-    `render()` adds `.enter` to `<main>` when `viewing|kind` differs from last time, so the 5 s
-    refresh during a sync does not replay them. Player tabs are rebuilt only when the people
-    change, and the join form is not rebuilt while it is on screen (it would wipe typed text).
-  - All motion is switched off under `prefers-reduced-motion`. Light and dark themes both exist.
-  - The page's Content-Security-Policy is `default-src 'self'`: no inline scripts or styles in the
-    HTML, no outside fonts or scripts. Keep new code in `app.js` / `app.css`.
-  - A lone player tab is hidden (`[hidden]` is forced to `display: none`; before that fix a
-    `display: flex` rule kept it visible).
-- How the UI was checked: a short Node script drove headless Chrome over the DevTools protocol
-  against a local server (`ONEFIX_LOCAL_USER`, sample `data.json`), clicked each button and took
-  screenshots at 1280 and 390 px, dark and light. Plain `--screenshot` cannot open a modal, and
-  it crops below about 500 px wide. The motion itself was not recorded: judged only by Brandon.
+- `/login` is a short landing page for invited people (16 Nov 2026): headline, one action repeated
+  ("Sign in through Steam"), a "Video coming soon" placeholder under the hero (Brandon will record
+  a how-it-works video; there is no sample fix card on the page), four one-line steps, the two
+  early card states (copied from the `fixtures/` output; see `scripts/make_fixtures.py`) and
+  short questions. Brandon wants little text on this page. Still `noindex`.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).
