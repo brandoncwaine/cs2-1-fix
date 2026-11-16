@@ -95,13 +95,19 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   the owner is. The owner needs no invite code and does not count against a full site.
 - `/login` is a short landing page for invited people (16 Nov 2026): headline, one action repeated
   ("Sign in through Steam"), a "Video coming soon" placeholder under the hero (Brandon will record
-  a how-it-works video; there is no sample fix card on the page), four one-line steps, the two
-  early card states (copied from the `fixtures/` output; see `scripts/make_fixtures.py`) and
-  short questions. Brandon wants little text on this page. Still `noindex`.
-  The two sample cards have a map screenshot banner (D10; pictures in `static/maps/`, one per map,
-  served through `STATIC_FILES` in `web.py`; only Mirage and Inferno are used so far). The site's content security policy blocks `style="..."`
-  attributes in the HTML, so static pages must use classes; check pages through the local server,
-  not a file harness, or this is missed (the sample progress bar showed full on the live site).
+  a how-it-works video), four one-line steps, two sample fix cards and short questions. Brandon
+  wants little text on this page and wants the examples to be fix cards, not the empty states.
+  Still `noindex`. The sample cards are shortened by hand from the `fixtures/` output (Mirage T
+  and Inferno CT; `scripts/make_fixtures.py`): update them if the fixtures or card numbers change.
+- Every card, on both pages, has a map screenshot banner (D10; pictures in `static/maps/`, one per
+  map, served through `STATIC_FILES` in `web.py`, chosen by the class `map-<name>` in `app.css`;
+  a map with no picture gets a plain banner). Card titles are plain words ("Dying first and
+  alone", "Dying untraded": `DETECTOR_TITLES` in `app.js`).
+- The site's content security policy blocks `style="..."` attributes in the HTML, so static pages
+  must use classes. Check pages through the local server, not a file harness, or this is missed.
+  Preview with sample data: copy `fixtures/*.json` into `<parsed>/<steamid>/`, replace `"me"` with
+  that steamid, run `onefix.publish`, and start `onefix.web` with `ONEFIX_WEB_DIR` and
+  `ONEFIX_CONFIG_DIR` pointing at scratch folders.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).
