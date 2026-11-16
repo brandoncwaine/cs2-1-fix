@@ -195,20 +195,16 @@ dialog.modal.closing::backdrop { animation: fade-out 0.16s ease both; }
   content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 999px;
   background: var(--text); color: var(--bg); font-size: 14px; font-weight: 700; line-height: 28px; text-align: center;
 }
-/* Sample cards with a map banner. The banner is drawn here, with no game artwork; to use a picture
-   later, add it to .map-<name> .map-art as a background-image under the scrim. */
+/* Sample cards with a map banner: a picture from static/maps/ under a dark scrim, so the name stays readable. */
 .mapcard { padding: 0; overflow: hidden; }
 .map-art {
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 104px; padding: 14px 18px; color: #fff;
-  background:
-    linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.45)),
-    repeating-radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.09) 0 1px, transparent 1px 13px),
-    linear-gradient(135deg, var(--map-a), var(--map-b));
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 132px; padding: 14px 18px; color: #fff;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.7)), var(--map-image) center / cover, #2a2d34;
 }
-.map-art b { font-size: 24px; line-height: 1; letter-spacing: -0.02em; }
-.map-art .side { background: rgba(0, 0, 0, 0.4); color: #fff; }
-.map-mirage { --map-a: #c08a3e; --map-b: #5a3a1c; }
-.map-inferno { --map-a: #b4513f; --map-b: #47211d; }
+.map-art b { font-size: 24px; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+.map-art .side { background: rgba(0, 0, 0, 0.55); color: #fff; }
+.map-mirage { --map-image: url(/static/maps/mirage.jpg); }
+.map-inferno { --map-image: url(/static/maps/inferno.jpg); }
 .mapcard-body { padding: 16px 18px 18px; }
 .mapcard .progress { margin-top: 14px; }
 .states .progress > div { width: 40%; }

@@ -57,6 +57,8 @@ MAX_BODY_BYTES = 4096
 STATIC_FILES = {
     "/static/app.css": ("app.css", "text/css; charset=utf-8"),
     "/static/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    # Map pictures for the card banners: one per map, named after it (de_mirage -> mirage.jpg).
+    **{f"/static/maps/{p.name}": (f"maps/{p.name}", "image/jpeg") for p in sorted((STATIC / "maps").glob("*.jpg"))},
 }
 
 
