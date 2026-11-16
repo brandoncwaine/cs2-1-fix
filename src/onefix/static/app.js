@@ -54,19 +54,62 @@ function cardShell(card, extra = '') {
   return { box, body };
 }
 
+// What the "wins otherwise" bar is compared with, per detector (the card's stats use the same set).
+const COMPARED_WITH = {
+  isolated_opening_death: 'in your other rounds',
+  untraded_death: 'in other rounds you die in',
+  missed_trade: 'in other rounds with a chance to trade',
+  repeek_death: 'in other rounds where you get a kill, then die',
+};
+const pct = (n) => `${Math.round(n)}%`;
+
+function winRow(value, label, kind) {
+  const row = el('div', `win ${kind}`);
+  const bar = el('div', 'win-bar');
+  const fill = el('div');
+  fill.style.width = `${Math.max(2, Math.round(value))}%`;
+  bar.append(fill);
+  row.append(el('b', '', pct(value)), el('span', 'win-label', label), bar);
+  return row;
+}
+
+// The front of a fix card: what happens, how often, what it does to the win rate, one button.
 function fixCard(card) {
   const { box: shell, body: box } = cardShell(card, 'fix');
-  box.append(el('h3', '', `${DETECTOR_TITLES[card.detector] || card.detector} at ${placeName(card.place)}`));
-  box.append(el('p', 'lead', card.fix_text));
+  const title = `${DETECTOR_TITLES[card.detector] || card.detector} at ${placeName(card.place)}`;
+  box.append(el('h3', '', title));
+  const often = el('p', 'often');
+  often.append('Happens in ', el('b', '', pct(card.metric.baseline)), ` of your ${card.side} rounds`);
+  box.append(often);
 
-  box.append(el('p', 'label', 'Drill'), el('p', '', card.drill));
+  const wins = el('div', 'wins');
+  wins.append(el('p', 'label', 'Rounds your team wins'),
+    winRow(card.stats.win_rate_fired_pct, 'when this happens', 'bad'),
+    winRow(card.stats.win_rate_other_pct, COMPARED_WITH[card.detector] || 'otherwise', 'good'));
+  box.append(wins);
+
+  const how = el('button', 'primary how', 'How to fix it');
+  how.type = 'button';
+  how.addEventListener('click', () => openModal((close) => fixDetails(card, title, close)));
+  box.append(how);
+  return shell;
+}
+
+// Behind the button: the advice, the drill, the target, the rounds to watch and the raw numbers.
+function fixDetails(card, title, close) {
+  const box = el('div', 'howto');
+  box.append(el('p', 'label', title), el('h2', '', 'How to fix it'));
+  box.append(el('p', 'advice', card.advice || card.fix_text));
+
+  const drill = el('div', 'drill');
+  drill.append(el('p', 'label', 'Drill'), el('p', '', card.drill));
+  box.append(drill);
 
   const m = card.metric;
   box.append(el('p', 'label', 'Target'));
   const metric = el('div', 'metric');
-  const goal = el('b', 'goal', String(m.target));
-  metric.append(el('b', '', String(m.baseline)), el('span', 'arrow', '→'), goal,
-    el('span', 'muted', `per 100 ${card.side} rounds, over your next ${plural(m.window_matches, 'match', 'matches')}`));
+  metric.append(el('b', '', pct(m.baseline)), el('span', 'arrow', '→'), el('b', 'goal', pct(m.target)),
+    el('span', 'muted', `of your ${card.side} rounds, over your next ${plural(m.window_matches, 'match', 'matches')}`));
   box.append(metric);
 
   box.append(el('p', 'label', 'Rounds to watch'));
@@ -85,7 +128,7 @@ function fixCard(card) {
   details.append(el('summary', '', 'The numbers'));
   const dl = el('dl');
   const rows = [
-    ['Rounds it happened in', `${s.fired_rounds} (in ${plural(s.matches_with_pattern, 'match', 'matches')})`],
+    ['Rounds it happened in', `${s.fired_rounds} of ${card.side_rounds} (in ${plural(s.matches_with_pattern, 'match', 'matches')})`],
     ['Won when it happened', `${s.win_rate_fired_pct}%`],
     [`Won in ${plural(s.comparison_rounds, 'comparison round')}`, `${s.win_rate_other_pct}%`],
     ['Rounds it may have cost', String(s.rounds_cost)],
@@ -95,7 +138,14 @@ function fixCard(card) {
   for (const [k, v] of rows) dl.append(el('dt', '', k), el('dd', '', v));
   details.append(dl, el('p', 'note', s.note));
   box.append(details);
-  return shell;
+
+  const actions = el('div', 'actions');
+  const done = el('button', '', 'Close');
+  done.type = 'button';
+  done.addEventListener('click', close);
+  actions.append(done);
+  box.append(actions);
+  return box;
 }
 
 function thinCard(card) {

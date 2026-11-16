@@ -23,6 +23,9 @@ def test_fix_card_for_repeated_pattern():
     assert card["metric"]["baseline"] == 13.9
     assert card["metric"]["target"] == 7.0
     assert "5 of 36 rounds" in card["fix_text"]
+    # The advice on its own (shown behind "How to fix it") is the end of the fix text.
+    assert card["advice"].startswith("Stop taking first contact at Palace alone")
+    assert card["fix_text"].endswith(card["advice"])
 
 
 def test_evidence_links_to_real_rounds_most_recent_first():

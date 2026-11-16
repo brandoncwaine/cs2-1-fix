@@ -123,7 +123,27 @@ a.button { display: block; padding: 11px; text-align: center; text-decoration: n
 .side.CT { background: var(--ct-bg); color: var(--ct); }
 .rounds { font-size: 13px; color: var(--muted); }
 .card h3 { font-size: 18px; line-height: 1.3; }
-.card .lead { margin-top: 8px; }
+.card .often { margin-top: 6px; color: var(--muted); }
+.card .often b { color: var(--text); }
+/* Win rate with and without the habit: a number, what it is, and a bar. */
+.wins { display: grid; gap: 12px; }
+.wins .label { margin-bottom: 0; }
+.win { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 6px 10px; }
+.win b { min-width: 52px; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.win-label { font-size: 14px; color: var(--muted); }
+.win-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.win-bar > div { height: 100%; border-radius: 999px; background: var(--accent); transform-origin: left; }
+.win.bad b { color: var(--danger); }
+.win.bad .win-bar > div { background: var(--danger); }
+.card button.how { width: 100%; margin-top: 20px; padding: 11px; }
+/* "How to fix it": in a modal on the signed-in page, a box on the sign-in page. */
+.howto { padding: 24px; }
+.howto > .label:first-child { margin-top: 0; }
+.howto h2 { font-size: 22px; letter-spacing: -0.01em; }
+.howto .advice { margin-top: 10px; }
+.howto .actions { display: flex; margin-top: 22px; }
+.drill { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--accent-soft); border-radius: 12px; background: var(--accent-soft); }
+.drill .label { margin-top: 0; color: var(--accent); }
 .card .reason { margin-top: 6px; font-size: 14px; color: var(--muted); }
 .label { margin: 16px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 
@@ -213,6 +233,7 @@ dialog.modal.closing::backdrop { animation: fade-out 0.16s ease both; }
   content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 999px;
   background: var(--text); color: var(--bg); font-size: 14px; font-weight: 700; line-height: 28px; text-align: center;
 }
+.w13 { width: 13%; } .w17 { width: 17%; } .w59 { width: 59%; } .w71 { width: 71%; }
 .states { margin-top: 20px; }
 .states + p { margin-top: 10px; }
 /* Questions: the whole row is the click target; the answer slides open where the browser supports it. */
@@ -253,6 +274,7 @@ dialog.modal.closing::backdrop { animation: fade-out 0.16s ease both; }
 /* Entrance animations run only when the view changes (main gets .enter), not on every refresh. */
 .enter > * { animation: rise 0.45s var(--ease) both; }
 .enter .card { animation: rise 0.5s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 80ms); }
+.enter .win-bar > div { animation: grow 0.9s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 300ms); }
 .enter .progress > div { animation: grow 0.9s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 300ms); }
 .players, .account, .foot { animation: fade 0.5s ease both; }
 

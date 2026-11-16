@@ -14,12 +14,12 @@ REPEEK_DISTANCE = 250.0  # game units: died this close to where they got the kil
 
 METRIC_NAME = "repeek_deaths_per_100_side_rounds"
 COMPARISON = "the other rounds where you got a kill and died later"
+ADVICE_TEMPLATE = "After a kill at {place}, move: the enemy team now knows exactly where you are."
 FIX_TEMPLATE = (
     "On {map} {side} side, in {fired} of {side_rounds} rounds you got a kill at {place} "
     "and then died in the same spot within a few seconds. Your team won {wr_fired}% of "
-    "those rounds and {wr_other}% of {comparison}. After a kill at {place}, move: "
-    "the enemy team now knows exactly where you are."
-)
+    "those rounds and {wr_other}% of {comparison}. "
+) + ADVICE_TEMPLATE
 DRILL_TEMPLATE = (
     "For your next {window} {map} games: after every kill at {place}, get behind "
     "cover or change position before you look at the same angle again."

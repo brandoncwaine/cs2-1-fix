@@ -58,7 +58,8 @@ One JSON file per match, from the point of view of one player:
   `MIN_PATTERN_MATCHES` (2) matches.
 - **Impact score:** `rounds_cost = fired * (win_rate_other_rounds - win_rate_fired_rounds)`.
   This is an observed difference for this player, not a causal claim. Must be > 0.
-- **Fix text / drill:** fixed human-written templates filled with counted facts.
+- **Fix text / drill:** fixed human-written templates filled with counted facts. The card also carries
+  `advice`: the last sentence(s) of the fix text on their own (what to do, without the counts).
 - **Metric:** isolated opening deaths at that place per 100 rounds on that side.
   Target: half the baseline, over the next 3 matches on that map.
 

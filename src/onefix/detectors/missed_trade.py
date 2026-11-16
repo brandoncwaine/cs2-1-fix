@@ -11,13 +11,16 @@ NAME = "missed_trade"
 
 METRIC_NAME = "missed_trades_per_100_side_rounds"
 COMPARISON = "the other rounds where a teammate died within trade range of you"
+ADVICE_TEMPLATE = (
+    "When a teammate goes down next to you at {place}, take the fight straight away "
+    "while the killer is still exposed."
+)
 FIX_TEMPLATE = (
     "On {map} {side} side, in {fired} of {side_rounds} rounds a teammate died within "
     "trade range of you while you were at {place}, and nobody killed their killer in "
     "the next few seconds. Your team won {wr_fired}% of those rounds and {wr_other}% of "
-    "{comparison}. When a teammate goes down next to you at {place}, take the fight "
-    "straight away while the killer is still exposed."
-)
+    "{comparison}. "
+) + ADVICE_TEMPLATE
 DRILL_TEMPLATE = (
     "For your next {window} {map} games: when you play {place} with a teammate ahead "
     "of you, keep your crosshair on the angle they are fighting. If they die, swing "

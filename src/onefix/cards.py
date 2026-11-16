@@ -140,6 +140,7 @@ def _fix_card(map_: str, side: str, n: int, c: dict, tested: int, threshold: flo
         "detector": det.NAME,
         "place": c["place"],
         "fix_text": det.FIX_TEMPLATE.format(**fill),
+        "advice": det.ADVICE_TEMPLATE.format(**fill),
         "drill": det.DRILL_TEMPLATE.format(**fill),
         "evidence": [
             {"match_id": e.match_id, "round": e.round, "t": e.t, "place": e.place}

@@ -103,6 +103,12 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   map, served through `STATIC_FILES` in `web.py`, chosen by the class `map-<name>` in `app.css`;
   a map with no picture gets a plain banner). Card titles are plain words ("Dying first and
   alone", "Dying untraded": `DETECTOR_TITLES` in `app.js`).
+- Fix cards are short on purpose (Brandon, 16 Nov 2026: no walls of text, percentages not round
+  counts). Front: title, "Happens in N% of your T rounds", two win-rate bars (when it happens /
+  the comparison rounds), and a "How to fix it" button. The button opens a modal with the advice
+  (`advice` in the card JSON; falls back to `fix_text` for data written before it existed), the
+  drill, the target as percentages, the rounds to watch and the raw numbers. On `/login` the
+  sample cards show the drill in a box instead (no script on that page).
 - The site's content security policy blocks `style="..."` attributes in the HTML, so static pages
   must use classes. Check pages through the local server, not a file harness, or this is missed.
   Preview with sample data: copy `fixtures/*.json` into `<parsed>/<steamid>/`, replace `"me"` with

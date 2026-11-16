@@ -15,13 +15,15 @@ ISOLATION_DISTANCE = TRADE_RANGE  # game units to nearest living teammate
 
 METRIC_NAME = "isolated_opening_deaths_per_100_side_rounds"
 COMPARISON = "the others"
+ADVICE_TEMPLATE = (
+    "Stop taking first contact at {place} alone: wait for a teammate in trade "
+    "range or a flash before you peek."
+)
 FIX_TEMPLATE = (
     "On {map} {side} side you were the first on your team to die at {place} in "
     "{fired} of {side_rounds} rounds, with no teammate close enough to trade. "
     "Your team won {wr_fired}% of those rounds and {wr_other}% of {comparison}. "
-    "Stop taking first contact at {place} alone: wait for a teammate in trade "
-    "range or a flash before you peek."
-)
+) + ADVICE_TEMPLATE
 DRILL_TEMPLATE = (
     "For your next {window} {map} games: before first contact at {place}, check "
     "the radar for a teammate in trade range. If there is none, hold the angle "

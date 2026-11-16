@@ -10,13 +10,15 @@ NAME = "untraded_death"
 
 METRIC_NAME = "untraded_deaths_per_100_side_rounds"
 COMPARISON = "the other rounds you died in before your team was outnumbered"
+ADVICE_TEMPLATE = (
+    "Before you take a fight at {place}, make sure a teammate is set up to trade you, "
+    "or fight from a spot you can fall back from."
+)
 FIX_TEMPLATE = (
     "On {map} {side} side you died at {place} without being traded in {fired} of "
     "{side_rounds} rounds, while your team was not yet outnumbered. Your team won "
-    "{wr_fired}% of those rounds and {wr_other}% of {comparison}. Before you "
-    "take a fight at {place}, make sure a teammate is set up to trade you, or "
-    "fight from a spot you can fall back from."
-)
+    "{wr_fired}% of those rounds and {wr_other}% of {comparison}. "
+) + ADVICE_TEMPLATE
 DRILL_TEMPLATE = (
     "For your next {window} {map} games: each time you are about to fight at "
     "{place}, call it and check a teammate can see the angle you are fighting. "
