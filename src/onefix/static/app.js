@@ -10,8 +10,8 @@ const POLL_MS = 5000;
 const MATCH_HISTORY_HELP = 'https://help.steampowered.com/en/wizard/HelpWithGameIssue/?appid=730&issueid=128';
 
 let state = null;
-let editing = false; // the signed-in person is changing their codes
-let confirming = null; // which delete button is showing "Are you sure?"
+let notice = '';
+let lastView = null; // entrance animations play when this changes, not on every refresh
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -195,11 +195,32 @@ function field(form, name, label, hint, attrs = {}) {
   return input;
 }
 
-function joinForm(me) {
+// A modal window. `build(close)` returns its content. Esc, the backdrop and Cancel all close it.
+function openModal(build, className = '') {
+  const dialog = el('dialog', `modal ${className}`.trim());
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    dialog.classList.add('closing');
+    const done = () => { dialog.close(); dialog.remove(); };
+    dialog.addEventListener('animationend', done, { once: true });
+    setTimeout(done, 250); // in case animations are off
+  };
+  dialog.addEventListener('cancel', (event) => { event.preventDefault(); close(); });
+  dialog.addEventListener('click', (event) => { if (event.target === dialog) close(); });
+  dialog.append(build(close));
+  document.body.append(dialog);
+  dialog.showModal();
+  return close;
+}
+
+function joinForm(me, close) {
   const updating = me.joined;
   const form = el('form', 'join');
   form.noValidate = true;
-  form.append(el('h2', '', updating ? 'Update your codes' : 'Connect your matches'));
+  const title = el('h2', '', updating ? 'Update your codes' : 'Connect your matches');
+  form.append(title);
   form.append(el('p', 'muted', updating
     ? 'Use this if you made a new authentication code on Steam, or want a different name.'
     : 'You are signed in. To find your matches, this site needs two codes from Steam.'));
@@ -226,15 +247,15 @@ function joinForm(me) {
   general.setAttribute('role', 'alert');
   form.append(general);
   const actions = el('div', 'actions');
+  if (close) {
+    const cancel = el('button', '', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', close);
+    actions.append(cancel);
+  }
   const submit = el('button', 'primary', updating ? 'Save' : 'Connect');
   submit.type = 'submit';
   actions.append(submit);
-  if (updating) {
-    const cancel = el('button', '', 'Cancel');
-    cancel.type = 'button';
-    cancel.addEventListener('click', () => { editing = false; render(); });
-    actions.append(cancel);
-  }
   form.append(actions);
   form.append(el('p', 'promise',
     'Never type your Steam password here: this site does not ask for it. The codes only let it read your '
@@ -268,61 +289,71 @@ function joinForm(me) {
       general.hidden = false;
       return;
     }
-    editing = false;
+    if (close) close();
     notice = res.body.warning || (updating ? 'Saved.' : 'Connected. Your first sync has started; it takes a few minutes per match.');
     load().catch(showError);
   });
   return form;
 }
 
-let notice = '';
-
-function confirmButton(key, label, question, action) {
-  const wrap = el('span');
-  if (confirming !== key) {
-    const b = el('button', 'quiet danger', label);
-    b.type = 'button';
-    b.addEventListener('click', () => { confirming = key; render(); });
-    wrap.append(b);
-    return wrap;
-  }
-  const yes = el('button', 'danger', 'Yes, delete');
-  yes.type = 'button';
-  yes.addEventListener('click', async () => { confirming = null; yes.disabled = true; await action(); });
-  const no = el('button', '', 'Cancel');
-  no.type = 'button';
-  no.addEventListener('click', () => { confirming = null; render(); });
-  wrap.append(el('span', 'muted', `${question} `), yes, ' ', no);
-  return wrap;
+function confirmModal(title, text, action) {
+  openModal((close) => {
+    const box = el('div', 'confirm');
+    box.append(el('h2', '', title), el('p', '', text));
+    const actions = el('div', 'actions');
+    const cancel = el('button', '', 'Cancel');
+    cancel.type = 'button';
+    cancel.autofocus = true; // the safe choice gets the focus
+    cancel.addEventListener('click', close);
+    const yes = el('button', 'danger solid', 'Delete');
+    yes.type = 'button';
+    yes.addEventListener('click', async () => {
+      yes.disabled = true;
+      yes.textContent = 'Deleting…';
+      await action();
+      close();
+    });
+    actions.append(cancel, yes);
+    box.append(actions);
+    return box;
+  }, 'narrow');
 }
 
 function renderAccount() {
   const box = document.getElementById('account');
   box.replaceChildren();
   const { me, viewing, players } = state;
-  if (editing || (!me.joined && viewing === me.steamid)) return;
+  if (!me.joined && viewing === me.steamid) return;
   if (viewing === me.steamid) {
     box.append(el('span', 'who', `Signed in as ${me.name}`));
     if (me.invited) {
       const edit = el('button', 'quiet', 'Update my codes');
       edit.type = 'button';
-      edit.addEventListener('click', () => { editing = true; render(); });
-      box.append(edit, confirmButton('leave', 'Delete my data', 'Delete your matches, cards and codes?', async () => {
-        await post('/api/leave');
-        notice = 'Your data is being deleted.';
-        load().catch(showError);
-      }));
+      edit.addEventListener('click', () => openModal((close) => joinForm(state.me, close)));
+      const leave = el('button', 'quiet danger', 'Delete my data');
+      leave.type = 'button';
+      leave.addEventListener('click', () => confirmModal('Delete your data?',
+        'This deletes your matches, cards and Steam codes from this site. It cannot be undone.', async () => {
+          await post('/api/leave');
+          notice = 'Your data is being deleted.';
+          await load().catch(showError);
+        }));
+      box.append(edit, leave);
     }
     return;
   }
   const other = (players || []).find((p) => p.steamid === viewing);
   if (other && other.invited) {
     box.append(el('span', 'who', `Viewing ${other.name}`));
-    box.append(confirmButton('remove', 'Remove this person', `Delete ${other.name}'s matches, cards and codes?`, async () => {
-      await post('/api/remove', { steamid: viewing });
-      location.hash = '';
-      load().catch(showError);
-    }));
+    const remove = el('button', 'quiet danger', 'Remove this person');
+    remove.type = 'button';
+    remove.addEventListener('click', () => confirmModal(`Remove ${other.name}?`,
+      `This deletes ${other.name}'s matches, cards and Steam codes from this site. It cannot be undone.`, async () => {
+        await post('/api/remove', { steamid: viewing });
+        location.hash = '';
+        await load().catch(showError);
+      }));
+    box.append(remove);
   }
 }
 
@@ -331,36 +362,55 @@ function render() {
   const syncButton = document.getElementById('sync');
   syncButton.hidden = !sync.enabled || !(me.joined || me.owner);
   syncButton.disabled = sync.running;
+  syncButton.classList.toggle('busy', sync.running);
   syncButton.textContent = sync.running ? 'Syncing…' : 'Sync now';
   const synced = document.getElementById('synced');
   synced.textContent = state.synced_at && me.joined ? syncedText(state.synced_at) : '';
   if (sync.last_ok === false && !sync.running && me.joined) synced.textContent += ' · last sync had problems';
 
   const nav = document.getElementById('players');
-  nav.replaceChildren();
-  nav.hidden = !players || players.length < 2 || editing;
-  for (const p of players || []) {
-    const b = el('button', '', p.name);
-    b.type = 'button';
-    b.setAttribute('aria-pressed', String(p.steamid === viewing));
-    b.addEventListener('click', () => { location.hash = p.steamid; });
-    nav.append(b);
+  nav.hidden = !players || players.length < 2;
+  const tabs = (players || []).map((p) => `${p.steamid}:${p.name}`).join('|');
+  if (nav.dataset.tabs !== tabs) { // rebuild only when the people change, so tabs do not flicker
+    nav.dataset.tabs = tabs;
+    nav.replaceChildren();
+    for (const p of players || []) {
+      const b = el('button', '', p.name);
+      b.type = 'button';
+      b.dataset.steamid = p.steamid;
+      b.addEventListener('click', () => { location.hash = p.steamid; });
+      nav.append(b);
+    }
   }
+  for (const b of nav.children) b.setAttribute('aria-pressed', String(b.dataset.steamid === viewing));
 
   const main = document.getElementById('main');
-  main.replaceChildren();
-  if (notice) main.append(el('p', 'notice', notice));
   const mine = viewing === me.steamid;
-  if ((!me.joined && mine) || editing) {
-    if (me.joined || me.owner || state.joining_open) {
-      main.append(joinForm(me));
+  const kind = !me.joined && mine ? 'join' : player ? 'cards' : 'empty';
+  // Do not rebuild the first-time form while someone is typing in it.
+  if (kind === 'join' && lastView === `${viewing}|join` && main.querySelector('form.join')) {
+    renderAccount();
+    return;
+  }
+  const view = `${viewing}|${kind}`;
+  main.classList.remove('enter');
+  if (view !== lastView) {
+    void main.offsetWidth; // restart the animation
+    main.classList.add('enter');
+    lastView = view;
+  }
+  main.replaceChildren();
+  if (notice) main.append(el('p', 'notice good', notice));
+  if (kind === 'join') {
+    if (me.owner || state.joining_open) {
+      main.append(joinForm(me, null));
     } else {
       const closed = el('div', 'empty');
       closed.append(el('p', '', 'This site is invite only and is not taking new people right now.'),
         el('p', 'muted', 'Ask the person who sent you the link.'));
       main.append(closed);
     }
-  } else if (player) {
+  } else if (kind === 'cards') {
     renderPlayer(player, main);
   } else {
     const empty = el('div', 'empty');
@@ -368,6 +418,7 @@ function render() {
       el('p', 'muted', 'Downloading and reading demos takes a few minutes per match. This page updates by itself.'));
     main.append(empty);
   }
+  main.querySelectorAll('.card').forEach((card, i) => card.style.setProperty('--i', String(i)));
   renderAccount();
 }
 
@@ -393,5 +444,5 @@ document.getElementById('sync').addEventListener('click', async () => {
   await post('/api/sync');
   load().catch(showError);
 });
-window.addEventListener('hashchange', () => { notice = ''; confirming = null; load().catch(showError); });
+window.addEventListener('hashchange', () => { notice = ''; load().catch(showError); });
 load().catch(showError);
