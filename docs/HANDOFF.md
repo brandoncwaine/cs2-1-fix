@@ -90,7 +90,8 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   people. Users live in `/data/config/onefix.db`; `scripts/sync.sh` exports them to the ingest step
   and deletes removed users' parsed matches and fetch history before each sync.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
-  data. Not checked: a real Steam sign-in round trip in a browser, and a real friend joining.
+  data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
+  checked: a real friend joining (invite code, Steam code check, first sync for a second account).
 - Live since 16 Nov 2026 on Brandon's personal Railway: https://cs2-1-fix-production.up.railway.app
   (sign-in page, health check and first sync confirmed; signed-in page not checked from here).
 
