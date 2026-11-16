@@ -98,6 +98,10 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   a how-it-works video; there is no sample fix card on the page), four one-line steps, the two
   early card states (copied from the `fixtures/` output; see `scripts/make_fixtures.py`) and
   short questions. Brandon wants little text on this page. Still `noindex`.
+  The two sample cards have a drawn map banner (CSS only, no game artwork: real map pictures are
+  Valve's, see D4; Brandon has not decided). The site's content security policy blocks `style="..."`
+  attributes in the HTML, so static pages must use classes; check pages through the local server,
+  not a file harness, or this is missed (the sample progress bar showed full on the live site).
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).

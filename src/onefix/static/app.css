@@ -195,13 +195,47 @@ dialog.modal.closing::backdrop { animation: fade-out 0.16s ease both; }
   content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 999px;
   background: var(--text); color: var(--bg); font-size: 14px; font-weight: 700; line-height: 28px; text-align: center;
 }
+/* Sample cards with a map banner. The banner is drawn here, with no game artwork; to use a picture
+   later, add it to .map-<name> .map-art as a background-image under the scrim. */
+.mapcard { padding: 0; overflow: hidden; }
+.map-art {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 104px; padding: 14px 18px; color: #fff;
+  background:
+    linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.45)),
+    repeating-radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.09) 0 1px, transparent 1px 13px),
+    linear-gradient(135deg, var(--map-a), var(--map-b));
+}
+.map-art b { font-size: 24px; line-height: 1; letter-spacing: -0.02em; }
+.map-art .side { background: rgba(0, 0, 0, 0.4); color: #fff; }
+.map-mirage { --map-a: #c08a3e; --map-b: #5a3a1c; }
+.map-inferno { --map-a: #b4513f; --map-b: #47211d; }
+.mapcard-body { padding: 16px 18px 18px; }
+.mapcard .progress { margin-top: 14px; }
+.states .progress > div { width: 40%; }
 .states { margin-top: 20px; }
 .states + p { margin-top: 10px; }
-.faq { max-width: 62ch; }
-.faq details { margin: 0; padding: 14px 0; border-top: 1px solid var(--line); font-size: 16px; }
-.faq details:first-child { padding-top: 0; border-top: 0; }
-.faq summary { color: var(--text); font-weight: 600; }
-.faq details p { margin-top: 8px; color: var(--muted); }
+/* Questions: the whole row is the click target; the answer slides open where the browser supports it. */
+.faq { max-width: 62ch; margin-top: -16px; interpolate-size: allow-keywords; }
+.faq details { margin: 0; border-top: 1px solid var(--line); font-size: 16px; }
+.faq details:first-child { border-top: 0; }
+.faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0;
+  list-style: none; color: var(--text); font-weight: 600; transition: color 0.15s, padding 0.25s var(--ease);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: ""; flex: none; width: 8px; height: 8px; margin: 0 6px 4px 0; border: solid var(--muted); border-width: 0 2px 2px 0;
+  transform: rotate(45deg); transition: transform 0.3s var(--ease), border-color 0.15s;
+}
+.faq summary:hover { color: var(--accent); padding-left: 6px; }
+.faq summary:hover::after { border-color: var(--accent); }
+.faq details[open] summary::after { transform: translateY(4px) rotate(-135deg); }
+.faq details p { margin: 0; padding: 0 32px 18px 0; color: var(--muted); }
+.faq details::details-content {
+  block-size: 0; overflow: clip; opacity: 0;
+  transition: block-size 0.3s var(--ease), opacity 0.3s ease, content-visibility 0.3s allow-discrete;
+}
+.faq details[open]::details-content { block-size: auto; opacity: 1; }
 .final { padding: 40px 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: var(--shadow); text-align: center; }
 .final p { margin-top: 8px; }
 .final .cta-note { margin-inline: auto; }

@@ -44,16 +44,20 @@
   <div>
     <p>A side is analysed after 30 rounds. Most sides start with no fix: the site does not guess.</p>
     <div class="cells states">
-      <article class="card">
-        <div class="card-head"><span class="side CT">CT side</span><span class="rounds">12 rounds</span></div>
-        <h3>Not enough rounds yet</h3>
-        <p class="reason">18 more rounds needed before this side is analysed (12 of 30).</p>
-        <div class="progress" role="progressbar" aria-label="Rounds played" aria-valuemin="0" aria-valuemax="30" aria-valuenow="12"><div style="width:40%"></div></div>
+      <article class="card mapcard map-inferno">
+        <div class="map-art"><b>Inferno</b><span class="side">CT side</span></div>
+        <div class="mapcard-body">
+          <h3>Not enough rounds yet</h3>
+          <div class="progress" role="progressbar" aria-label="Rounds played" aria-valuemin="0" aria-valuemax="30" aria-valuenow="12"><div></div></div>
+          <p class="reason">12 of 30 rounds</p>
+        </div>
       </article>
-      <article class="card">
-        <div class="card-head"><span class="side CT">CT side</span><span class="rounds">72 rounds</span></div>
-        <h3>No fix found</h3>
-        <p class="reason">2 pattern(s) repeated enough, but none passed the confidence gate (smallest p = 0.237, needed &lt;= 0.025).</p>
+      <article class="card mapcard map-mirage">
+        <div class="map-art"><b>Mirage</b><span class="side">CT side</span></div>
+        <div class="mapcard-body">
+          <h3>No fix found</h3>
+          <p class="reason">72 rounds checked. Nothing repeated often enough to call it a habit.</p>
+        </div>
       </article>
     </div>
     <p class="muted small">Sample cards.</p>
