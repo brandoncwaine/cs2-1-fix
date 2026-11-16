@@ -39,3 +39,22 @@ test('saved token file wins over BOT_REFRESH_TOKEN (it holds renewed tokens)', (
   assert.equal(loadToken(), 'renewed');
   delete process.env.BOT_REFRESH_TOKEN;
 });
+
+test('the top-level player comes first, then the players list', () => {
+  const friend = { name: ' Sam ', steamid: '76561190000000001', matchAuthCode: 'ABCD-EFGHI-JKLM', firstShareCode: ENV.ONEFIX_FIRST_SHARE_CODE };
+  const c = validateConfig(configFromEnv({ ...ENV, ONEFIX_PLAYER_NAME: 'Brandon', ONEFIX_PLAYERS: JSON.stringify([friend]) }), 'env');
+  assert.deepEqual(c.players.map((p) => [p.name, p.steamid]), [['Brandon', ENV.ONEFIX_STEAMID], ['Sam', friend.steamid]]);
+  assert.equal(c.webApiKey, ENV.STEAM_WEB_API_KEY);
+});
+
+test('a bad or repeated player is reported by position, without echoing values', () => {
+  const dup = { name: 'Dup', steamid: ENV.ONEFIX_STEAMID, matchAuthCode: 'bad-code-value', firstShareCode: ENV.ONEFIX_FIRST_SHARE_CODE };
+  const raw = configFromEnv({ ...ENV, ONEFIX_PLAYERS: JSON.stringify([dup]) });
+  assert.throws(() => validateConfig(raw, 'env'), (e) =>
+    /player 2: steamid is listed twice/.test(e.message) && /player 2: matchAuthCode/.test(e.message)
+    && !e.message.includes('bad-code-value'));
+});
+
+test('ONEFIX_PLAYERS that is not JSON fails without echoing it', () => {
+  assert.throws(() => configFromEnv({ ONEFIX_PLAYERS: '[{secret' }), (e) => !e.message.includes('secret'));
+});

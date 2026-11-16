@@ -26,6 +26,9 @@ Demos are fetched automatically: Steam's match-history API gives the player's sh
 ## D3 reaffirmed (2026-11-16)
 Kept one fix per map and side after the pro-demo results showed it needs ~15 maps of one map per player. Not to be revisited without a new entry.
 
+## D8 — Frontend: private site for Brandon and a few friends, one always-on service (2026-11-16)
+A small website shows each player's cards. Audience is Brandon plus 3-5 friends (the validation group from the handoff), not the public: one shared password, everyone sees every player. Friends are added by Brandon in the config (steamid64, match auth code, one share code each); there is no sign-up. The Railway cron became one always-on service that serves the site and runs the daily sync itself, because a Railway volume attaches to one service and a cron service is off between runs. Stdlib Python server, no framework, no database. Public sign-up (Steam login, per-user storage, privacy policy) is deliberately not built yet.
+
 ## Open (not decided)
 - Check Steam's terms on bot accounts (D7). FACEIT auto-import looks unlikely.
 - Benchmarks from a rank-matched or pro demo corpus as a v2 evidence base (source and licensing unresearched).

@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  decodeShareCode, demoFileName, demoUrlFromMatch, emptyState, idsFromFileName, isShareCode,
-  newerShareCodes, pendingCodes,
+  decodeShareCode, demoFileName, buildManifest, demoUrlFromMatch, emptyPlayerState, emptyState, idsFromFileName, isShareCode,
+  migrateState, newerShareCodes, pendingCodes,
 } from '../lib/core.js';
 
 // Example from the csgo-sharecode README (not a real user's match).
@@ -69,10 +69,36 @@ test('clear errors for bad credentials and unknown codes', async () => {
 });
 
 test('pending codes include the starting code once, and retry errors only', () => {
-  const state = emptyState();
+  const state = emptyPlayerState();
   assert.deepEqual(pendingCodes(state, A, [B, C]), [A, B, C]);
   state.matches[A] = { status: 'downloaded' };
   state.matches[B] = { status: 'error' };
   state.matches[C] = { status: 'expired' };
   assert.deepEqual(pendingCodes(state, A, [B, C]), [B]);
+});
+
+test('an old single-player state file becomes the first player\'s state', () => {
+  const old = { lastCode: B, matches: { [A]: { status: 'downloaded', file: '/d/a.dem' } } };
+  assert.deepEqual(migrateState(old, '1'), { players: { 1: old } });
+  const current = { players: { 2: emptyPlayerState() } };
+  assert.equal(migrateState(current, '1'), current);
+  assert.deepEqual(migrateState(null, '1'), emptyState());
+});
+
+test('manifest lists existing demos and problems per player, without codes or secrets', () => {
+  const config = { webApiKey: 'SECRETKEY', players: [
+    { name: 'Ann', steamid: '1', matchAuthCode: 'AUTH-SECRET', firstShareCode: A },
+    { name: 'Bob', steamid: '2', matchAuthCode: 'AUTH-OTHER', firstShareCode: B },
+  ] };
+  const state = { players: { 1: { lastCode: C, error: { message: `unknown code ${A} (412)` }, matches: {
+    [A]: { status: 'downloaded', file: '/d/b.dem' },
+    [B]: { status: 'downloaded', file: '/d/gone.dem' },
+    [C]: { status: 'expired' },
+  } } } };
+  const m = buildManifest(config, state, (f) => f !== '/d/gone.dem');
+  assert.deepEqual(m.players[0], {
+    steamid: '1', name: 'Ann', demos: ['/d/b.dem'], expired: 1, failed: 0, history_error: 'unknown code CSGO-… (412)',
+  });
+  assert.deepEqual(m.players[1], { steamid: '2', name: 'Bob', demos: [], expired: 0, failed: 0, history_error: null });
+  assert.doesNotMatch(JSON.stringify(m), /SECRET|AUTH-|CSGO-[A-Za-z0-9]{5}/);
 });

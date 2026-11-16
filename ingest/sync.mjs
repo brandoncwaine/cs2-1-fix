@@ -1,10 +1,11 @@
-// Fetch any new CS2 match demos for the configured player.
+// Fetch any new CS2 match demos for every configured player.
 //   cd ingest && npm run sync
-// 1. Steam Web API: walk the player's share codes forward from the last one handled.
+// 1. Steam Web API: walk each player's share codes forward from the last one handled.
 // 2. Bot account (saved session from `npm run login`) asks the CS2 game coordinator for each
 //    match's demo URL.
 // 3. Download from replay*.valve.net, decompress, save under demoDir with the client's file name.
 // State is saved after every match, so an interrupted run resumes where it stopped.
+// One player's bad auth code does not stop the others; the run then exits 1 at the end.
 import { spawnSync } from 'node:child_process';
 import { createWriteStream, existsSync, mkdirSync, renameSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,7 +16,9 @@ import GlobalOffensive from 'globaloffensive';
 import SteamUser from 'steam-user';
 
 import { loadConfig, loadState, loadToken, saveState, saveToken } from './lib/config.js';
-import { decodeShareCode, demoFileName, demoUrlFromMatch, newerShareCodes, pendingCodes } from './lib/core.js';
+import {
+  decodeShareCode, demoFileName, demoUrlFromMatch, emptyPlayerState, newerShareCodes, pendingCodes,
+} from './lib/core.js';
 
 const GC_TIMEOUT_MS = 60_000;
 const MATCH_TIMEOUT_MS = 30_000;
@@ -84,50 +87,68 @@ async function download(url, demoDir) {
 async function main() {
   const config = loadConfig();
   const demoDir = config.demoDir.replace(/^~(?=\/)/, process.env.HOME);
-  const state = loadState();
-  const knownCode = state.lastCode || config.firstShareCode;
+  const state = loadState(config.players[0].steamid);
+  const now = () => new Date().toISOString();
 
-  console.log(`Checking Steam for matches after ${knownCode}...`);
-  const newer = await newerShareCodes({
-    key: config.webApiKey, steamid: config.steamid, authCode: config.matchAuthCode, knownCode,
-  });
-  if (newer.length) state.lastCode = newer[newer.length - 1];
-  else if (!state.lastCode) state.lastCode = knownCode;
-  saveState(state);
-
-  const todo = pendingCodes(state, knownCode, newer);
-  console.log(`${newer.length} new match(es) on Steam; ${todo.length} to fetch.`);
-  if (!todo.length) return;
-
-  const { user, csgo } = await connectBot();
-  console.log('Connected to the CS2 game coordinator.');
-  const fetched = [];
-  try {
-    for (const code of todo) {
-      try {
-        const match = await requestMatch(csgo, code);
-        const url = demoUrlFromMatch(match);
-        if (!url) {
-          state.matches[code] = { status: 'expired', at: new Date().toISOString() };
-          console.log(`  ${code}: no demo (Valve deletes demos after a few weeks)`);
-        } else {
-          const { path, skipped } = await download(url, demoDir);
-          state.matches[code] = { status: 'downloaded', file: path, at: new Date().toISOString() };
-          console.log(`  ${code}: ${skipped ? 'already have' : 'saved'} ${path} (${(statSync(path).size / 1e6).toFixed(0)} MB)`);
-          if (!skipped) fetched.push(path);
-        }
-      } catch (err) {
-        state.matches[code] = { status: 'error', error: err.message, at: new Date().toISOString() };
-        console.log(`  ${code}: failed, will retry next run (${err.message})`);
-      }
+  const work = [];
+  let historyFailures = 0;
+  for (const player of config.players) {
+    const ps = (state.players[player.steamid] ??= emptyPlayerState());
+    const knownCode = ps.lastCode || player.firstShareCode;
+    let newer;
+    try {
+      newer = await newerShareCodes({
+        key: config.webApiKey, steamid: player.steamid, authCode: player.matchAuthCode, knownCode,
+      });
+    } catch (err) {
+      ps.error = { message: err.message, at: now() };
       saveState(state);
-      await sleep(BETWEEN_REQUESTS_MS);
+      historyFailures++;
+      console.log(`${player.name}: could not read match history (${err.message})`);
+      continue;
     }
-  } finally {
-    user.logOff();
+    delete ps.error;
+    if (newer.length) ps.lastCode = newer[newer.length - 1];
+    else if (!ps.lastCode) ps.lastCode = knownCode;
+    saveState(state);
+    const todo = pendingCodes(ps, knownCode, newer);
+    console.log(`${player.name}: ${newer.length} new match(es) on Steam; ${todo.length} to fetch.`);
+    work.push(...todo.map((code) => ({ player, ps, code })));
+  }
+
+  const fetched = [];
+  if (work.length) {
+    const { user, csgo } = await connectBot();
+    console.log('Connected to the CS2 game coordinator.');
+    try {
+      for (const { player, ps, code } of work) {
+        try {
+          const match = await requestMatch(csgo, code);
+          const url = demoUrlFromMatch(match);
+          if (!url) {
+            ps.matches[code] = { status: 'expired', at: now() };
+            console.log(`  ${player.name} ${code}: no demo (Valve deletes demos after a few weeks)`);
+          } else {
+            // Friends who played together share one demo file; it is downloaded once.
+            const { path, skipped } = await download(url, demoDir);
+            ps.matches[code] = { status: 'downloaded', file: path, at: now() };
+            console.log(`  ${player.name} ${code}: ${skipped ? 'already have' : 'saved'} ${path} (${(statSync(path).size / 1e6).toFixed(0)} MB)`);
+            if (!skipped) fetched.push(path);
+          }
+        } catch (err) {
+          ps.matches[code] = { status: 'error', error: err.message, at: now() };
+          console.log(`  ${player.name} ${code}: failed, will retry next run (${err.message})`);
+        }
+        saveState(state);
+        await sleep(BETWEEN_REQUESTS_MS);
+      }
+    } finally {
+      user.logOff();
+    }
   }
   console.log(`Done: ${fetched.length} new demo(s).`);
   for (const f of fetched) console.log(`NEW ${f}`);
+  if (historyFailures) throw new Error(`${historyFailures} player(s) could not be checked; see above.`);
 }
 
 main().then(() => setTimeout(() => process.exit(0), 500)).catch((err) => {

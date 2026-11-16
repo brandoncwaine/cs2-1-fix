@@ -1,4 +1,5 @@
-# Cloud image for the daily demo sync (Railway cron). Node for Steam, Python for parsing.
+# Cloud image: the private website plus the daily demo sync it runs (one always-on Railway
+# service). Node for Steam, Python for parsing and the web server.
 FROM node:22-bookworm-slim
 
 RUN apt-get update \
@@ -19,6 +20,9 @@ ENV ONEFIX_PYTHON=/opt/venv/bin/python \
     ONEFIX_CONFIG_DIR=/data/config \
     ONEFIX_DEMO_DIR=/data/demos \
     ONEFIX_PARSED_DIR=/data/parsed \
-    ONEFIX_CARDS_OUT=/data/cards.json
+    ONEFIX_WEB_DIR=/data/web \
+    PYTHONPATH=/app/src \
+    PYTHONUNBUFFERED=1
 
-CMD ["sh", "scripts/sync.sh"]
+# Serves the site on $PORT and runs scripts/sync.sh once a day (see src/onefix/web.py).
+CMD ["/opt/venv/bin/python", "-m", "onefix.web"]

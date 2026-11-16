@@ -5,7 +5,9 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "cronSchedule": "0 6 * * *",
-    "restartPolicyType": "NEVER"
+    "healthcheckPath": "/healthz",
+    "healthcheckTimeout": 60,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
   }
 }

@@ -65,6 +65,18 @@ gone (those deaths were mostly a player down); MOUZ events down 31-50%. Still no
 Fixed: both detectors now share the enemy-kill and trade rules (`detectors/common.py`, SPEC 2c).
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
+## Frontend (built 16 Nov 2026, DECISIONS D8)
+- `onefix.web`: private site behind one shared password, one page per player, one card per
+  map and side (fix / no fix found / not enough rounds). Checked by eye on sample data, since no
+  real player has a fix card yet. Ingestion handles several players (`players` in the config).
+- Railway service changed from a cron to always-on (site + daily sync at 06:00 UTC). It needs
+  `ONEFIX_WEB_PASSWORD` and a public domain; see ingest/README.md.
+- Not built: re-check on the site (`cards.recheck` exists but nothing stores the card a player
+  was given, so there is nothing to re-check against yet); a form for friends to add themselves;
+  per-player passwords; match dates (parser writes none).
+- Volume use grows ~200 MB per match and old demos are never deleted. Parsed matches are kept,
+  so demos could be deleted after parsing, but then a parser fix cannot be re-run on them.
+
 ## Suggested next steps
 - Ingestion works end to end (16 Nov 2026): share code -> bot -> GC -> 199 MB demo, named like
   client downloads, parsed, cards printed. Run `scripts/sync.sh` at least weekly (Valve deletes
@@ -79,7 +91,7 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
 
 ## Notes for building a UI (16 Nov 2026)
-- **Input is the card JSON** from `onefix.cli` (built in `src/onefix/cards.py`; formats in SPEC 3).
+- **Input is the card JSON** (`cards` per player in `data.json`; same as `onefix.cli` prints) (built in `src/onefix/cards.py`; formats in SPEC 3).
   One card per (map, side), three statuses:
   - `fix`: `detector`, `place`, `fix_text`, `drill`, `evidence[] {match_id, round, t, place}`,
     `metric {name, baseline, target, window_matches}`, `stats {fired_rounds,
@@ -97,11 +109,9 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - **Rules that bind the UI**: every claim links to its evidence rounds (D2); one card per map
   and side (D3, reaffirmed); no Valve / Counter-Strike logos or implied affiliation (D4);
   `stats.note` says the cost is observed, not causal: keep that framing.
-- **Where the data lives**: the Railway cron writes `/data/cards.json` on a volume attached to
-  the cron service only. A Railway volume mounts on one service, so a separate web service
-  cannot read it. Pick deliberately: write cards to a database/bucket the UI reads, or serve
-  the UI from the same service. Changing the cron service is shared infrastructure: check
-  with Brandon first.
+- **Where the data lives** (decided, D8): the UI is served from the same service as the sync.
+  `scripts/sync.sh` writes `/data/web/data.json` (all players, see `src/onefix/publish.py`);
+  `onefix.web` serves it. `/data/cards.json` is no longer written.
 - **Privacy**: parsed match JSON contains other players' Steam IDs; show only the analysed
   player's data, and keep the repo free of real parsed output (it is public).
 - Brandon's global preference: verify UI work by rendering it (headless Chrome screenshot),

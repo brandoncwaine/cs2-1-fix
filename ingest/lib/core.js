@@ -74,10 +74,43 @@ export function idsFromFileName(name) {
 }
 
 export function emptyState() {
+  return { players: {} };
+}
+
+export function emptyPlayerState() {
   return { lastCode: null, matches: {} };
 }
 
-/** Codes still to fetch: the known code itself if never handled, then newer ones. */
+/** State is kept per player (keyed by steamid64). A state file from before several players
+ *  were supported is one player's state at the top level: it belongs to the first player. */
+export function migrateState(raw, primarySteamid) {
+  if (raw?.players) return raw;
+  if (raw?.matches) {
+    return { players: { [primarySteamid]: { lastCode: raw.lastCode ?? null, matches: raw.matches } } };
+  }
+  return emptyState();
+}
+
+/** What the parser and the website need to know about each player. No secrets, no share codes.
+ *  `fileExists` is injectable for tests. */
+export function buildManifest(config, state, fileExists) {
+  return {
+    players: config.players.map((p) => {
+      const ps = state.players[p.steamid] ?? emptyPlayerState();
+      const entries = Object.values(ps.matches);
+      return {
+        steamid: p.steamid,
+        name: p.name,
+        demos: entries.filter((m) => m.status === 'downloaded' && fileExists(m.file)).map((m) => m.file).sort(),
+        expired: entries.filter((m) => m.status === 'expired').length,
+        failed: entries.filter((m) => m.status === 'error').length,
+        history_error: ps.error ? ps.error.message.replace(/CSGO(-[A-Za-z0-9]{5}){5}/g, 'CSGO-…') : null,
+      };
+    }),
+  };
+}
+
+/** Codes still to fetch for one player: the known code itself if never handled, then newer ones. */
 export function pendingCodes(state, knownCode, newer) {
   const all = [knownCode, ...newer].filter((c, i, a) => c && a.indexOf(c) === i);
   return all.filter((c) => !state.matches[c] || state.matches[c].status === 'error');

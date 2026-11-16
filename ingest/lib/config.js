@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSy
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { emptyState, isShareCode } from './core.js';
+import { isShareCode, migrateState } from './core.js';
 
 export const DIR = process.env.ONEFIX_CONFIG_DIR || join(homedir(), '.config', 'onefix');
 export const CONFIG = join(DIR, 'steam.json');
@@ -11,11 +11,13 @@ export const TOKEN = join(DIR, 'bot-refresh-token');
 export const STATE = join(DIR, 'ingest-state.json');
 
 export const CONFIG_TEMPLATE = {
+  name: 'Me',
   steamid: 'your main account steamid64 (17 digits)',
   webApiKey: 'from https://steamcommunity.com/dev/apikey',
   matchAuthCode: 'XXXX-XXXXX-XXXX from Steam Support > CS2 > Access to Your Match History',
   firstShareCode: 'CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx (any recent match of yours)',
   demoDir: join(homedir(), 'Documents', 'cs2-demos', 'own'),
+  players: [],
 };
 
 function ensureDir() {
@@ -31,15 +33,26 @@ export function writePrivate(path, text) {
   chmodSync(path, 0o600);
 }
 
-/** Config from environment variables (cloud), or null if ONEFIX_STEAMID is not set. */
+/** Config from environment variables (cloud), or null if none of them name a player.
+ *  ONEFIX_PLAYERS is a JSON list of further players: [{name, steamid, matchAuthCode, firstShareCode}]. */
 export function configFromEnv(env = process.env) {
-  if (!env.ONEFIX_STEAMID) return null;
+  if (!env.ONEFIX_STEAMID && !env.ONEFIX_PLAYERS) return null;
+  let players;
+  if (env.ONEFIX_PLAYERS) {
+    try {
+      players = JSON.parse(env.ONEFIX_PLAYERS);
+    } catch {
+      throw new Error('ONEFIX_PLAYERS is not valid JSON.'); // never echo it: it holds auth codes
+    }
+  }
   return {
+    name: env.ONEFIX_PLAYER_NAME,
     steamid: env.ONEFIX_STEAMID,
     webApiKey: env.STEAM_WEB_API_KEY,
     matchAuthCode: env.STEAM_MATCH_AUTH_CODE,
     firstShareCode: env.ONEFIX_FIRST_SHARE_CODE,
     demoDir: env.ONEFIX_DEMO_DIR || '/data/demos',
+    players,
   };
 }
 
@@ -53,15 +66,44 @@ export function loadConfig() {
   return validateConfig(c, fromEnv ? 'the environment variables' : CONFIG);
 }
 
+/**
+ * Check the raw config and return it in one shape: { webApiKey, demoDir, players: [...] }.
+ * The top-level steamid / matchAuthCode / firstShareCode are the first player; `players`
+ * lists any others. One Web API key reads every player's match history.
+ * Error messages name the field, never its value.
+ */
 export function validateConfig(c, where) {
   const problems = [];
-  if (!/^7656\d{13}$/.test(c.steamid ?? '')) problems.push('steamid must be a 17-digit steamid64');
   if (!/^[0-9A-F]{32}$/i.test(c.webApiKey ?? '')) problems.push('webApiKey must be the 32-character key');
-  if (!/^[0-9A-Z]{4}-[0-9A-Z]{5}-[0-9A-Z]{4}$/i.test(c.matchAuthCode ?? '')) problems.push('matchAuthCode must look like XXXX-XXXXX-XXXX');
-  if (!isShareCode(c.firstShareCode)) problems.push('firstShareCode must look like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx');
   if (!c.demoDir) problems.push('demoDir is missing');
+
+  const players = [];
+  if (c.steamid || c.matchAuthCode || c.firstShareCode) {
+    players.push({ name: c.name || 'Me', steamid: c.steamid, matchAuthCode: c.matchAuthCode, firstShareCode: c.firstShareCode });
+  }
+  if (c.players !== undefined && !Array.isArray(c.players)) problems.push('players must be a list');
+  else players.push(...(c.players ?? []));
+  if (!players.length) problems.push('no players: set steamid, matchAuthCode and firstShareCode');
+
+  const seen = new Set();
+  players.forEach((p, i) => {
+    const who = players.length > 1 ? `player ${i + 1}: ` : '';
+    if (!p || typeof p !== 'object') return problems.push(`${who}must be an object`);
+    if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 40) problems.push(`${who}name must be 1-40 characters`);
+    if (!/^7656\d{13}$/.test(p.steamid ?? '')) problems.push(`${who}steamid must be a 17-digit steamid64`);
+    else if (seen.has(p.steamid)) problems.push(`${who}steamid is listed twice`);
+    seen.add(p.steamid);
+    if (!/^[0-9A-Z]{4}-[0-9A-Z]{5}-[0-9A-Z]{4}$/i.test(p.matchAuthCode ?? '')) problems.push(`${who}matchAuthCode must look like XXXX-XXXXX-XXXX`);
+    if (!isShareCode(p.firstShareCode)) problems.push(`${who}firstShareCode must look like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx`);
+  });
   if (problems.length) throw new Error(`Fix ${where}:\n  - ${problems.join('\n  - ')}`);
-  return c;
+  return {
+    webApiKey: c.webApiKey,
+    demoDir: c.demoDir,
+    players: players.map((p) => ({
+      name: p.name.trim(), steamid: p.steamid, matchAuthCode: p.matchAuthCode, firstShareCode: p.firstShareCode,
+    })),
+  };
 }
 
 /** Saved token file first (it holds any renewed token), then BOT_REFRESH_TOKEN (cloud seed). */
@@ -75,8 +117,9 @@ export function saveToken(token) {
   writePrivate(TOKEN, token + '\n');
 }
 
-export function loadState() {
-  return existsSync(STATE) ? JSON.parse(readFileSync(STATE, 'utf8')) : emptyState();
+export function loadState(primarySteamid) {
+  const raw = existsSync(STATE) ? JSON.parse(readFileSync(STATE, 'utf8')) : null;
+  return migrateState(raw, primarySteamid);
 }
 
 export function saveState(state) {
