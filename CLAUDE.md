@@ -1,6 +1,7 @@
-# CS2 One-Fix Coach
+# Rewatch (repo: cs2-one-fix)
 
 Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric), then re-check.
+Product name is Rewatch (rewatch.gg, D11); code, package and env vars keep the `onefix` name.
 
 ## Hard rules
 - No in-game overlays or screen reading. Post-match or practice servers only.

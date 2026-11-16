@@ -35,6 +35,9 @@ Supersedes the shared password and "no sign-up" parts of D8. People sign in thro
 ## D10 — Map screenshots on card banners (2026-11-16)
 Brandon's call: cards may show an in-game screenshot of their map as a banner. The pictures are in `src/onefix/static/maps/`, taken from github.com/neustcs/cs2mapsthumbnails (no licence stated there) and shrunk to 960px. They show Valve's maps, so the rights are Valve's, not ours or that repo's. D4 still stands: no Valve or Counter-Strike logos, and the "Not affiliated with Valve" line stays on every page. Revisit before the site goes public or takes money.
 
+## D11 — Product name: Rewatch, at rewatch.gg (2026-11-16)
+Brandon's call. Chosen over Tells, Takeback and Reshot; One-Fix was rejected. rewatch.gg was unregistered on 16 Nov 2026 (checked with the .gg registry); every .com checked was taken. Only the name people see changes: the repo, the Python package (`onefix`) and the `ONEFIX_*` variables keep their names. Still to do: buy the domain, run a trademark search (D4), point the domain at Railway and set `ONEFIX_BASE_URL` so Steam sign-in returns to the new address.
+
 ## Open (not decided)
 - Check Steam's terms on bot accounts (D7). FACEIT auto-import looks unlikely.
 - Benchmarks from a rank-matched or pro demo corpus as a v2 evidence base (source and licensing unresearched).
