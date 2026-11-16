@@ -1,7 +1,7 @@
 """Detector: untraded_death. See SPEC.md section 2b. Deterministic; no I/O."""
 from __future__ import annotations
 
-from onefix.detectors.common import TRADE_WINDOW, Event, is_enemy_kill, was_traded
+from onefix.detectors.common import TRADE_WINDOW, Event, is_enemy_kill, outnumbered, was_traded
 from onefix.models import Kill, Match, Round
 
 __all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
@@ -9,10 +9,10 @@ __all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
 NAME = "untraded_death"
 
 METRIC_NAME = "untraded_deaths_per_100_side_rounds"
-COMPARISON = "the other rounds you died in"
+COMPARISON = "the other rounds you died in before your team was outnumbered"
 FIX_TEMPLATE = (
     "On {map} {side} side you died at {place} without being traded in {fired} of "
-    "{side_rounds} rounds, while teammates were still alive. Your team won "
+    "{side_rounds} rounds, while your team was not yet outnumbered. Your team won "
     "{wr_fired}% of those rounds and {wr_other}% of {comparison}. Before you "
     "take a fight at {place}, make sure a teammate is set up to trade you, or "
     "fight from a spot you can fall back from."
@@ -32,8 +32,12 @@ def _my_death(rnd: Round, steamid: str) -> Kill | None:
 
 
 def comparison_round(rnd: Round, steamid: str) -> bool:
-    """Compare only against rounds where the player also died."""
-    return _my_death(rnd, steamid) is not None
+    """Like for like: rounds where the player died before their team was outnumbered.
+
+    Deaths in already-outnumbered rounds are excluded from both sides of the comparison:
+    those rounds are nearly always lost, whatever the player did."""
+    death = _my_death(rnd, steamid)
+    return death is not None and not outnumbered(rnd, death)
 
 
 def fires(rnd: Round, steamid: str) -> Kill | None:
@@ -44,6 +48,8 @@ def fires(rnd: Round, steamid: str) -> Kill | None:
         return None  # suicide, fall, bomb or team kill
     if not death.victim_teammates_alive:
         return None  # last alive: nobody could trade
+    if outnumbered(rnd, death):
+        return None  # round already going badly: not evidence of a habit
     if was_traded(rnd, death):
         return None
     return death

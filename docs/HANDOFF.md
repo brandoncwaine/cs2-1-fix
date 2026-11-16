@@ -6,7 +6,7 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 - `models.py`: normalised match schema. `parse_demo.py`: .dem -> that schema via demoparser2.
 - Detectors: `isolated_opening_death`, `untraded_death`. `cards.py`: one card per map-side, re-check.
 - Confidence gate (SPEC 3a): one-sided Fisher exact test, Bonferroni over patterns tested per cell.
-- 48 tests pass. 41 on synthetic data (`tests/builders.py`); 7 parser tests on a public HLTV
+- 53 tests pass. 46 on synthetic data (`tests/builders.py`); 7 parser tests on a public HLTV
   demo kept outside git (`tests/test_parse_demo.py`, skipped if the demo is missing).
 - Environment: system Python is 3.9, too old. Use the project venv (Python 3.12, gitignored):
   `.venv/bin/python -m pytest`. `demoparser2` is installed there too.
@@ -48,20 +48,28 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
   Sharper triggers (bigger effect per event) are the fix, not a looser gate.
 
 ## Known problems, in priority order
-1. All thresholds are unvalidated guesses (900 units, 5 s trade window, target = half baseline,
+1. Data mismatch: detectors are only checked on pro demos and Brandon's 4 matches. The buyers
+   are lower-skill players; their patterns, base rates and thresholds are unmeasured.
+2. D3 risk (not re-argued, flagged): one fix per map *and side* needs ~15 maps of one map even
+   at 300+ rounds. Casual players spread across maps. Worth a deliberate decision.
+3. All thresholds are unvalidated guesses (900 units, 5 s trade window, target = half baseline,
    ALPHA = 0.05). The gate treats rounds as independent, which they are not.
-2. `rounds_cost` uses a different comparison set per detector, so cross-detector ranking is approximate.
-3. `untraded_death` counts deaths when the team is already outnumbered (36% of pro untraded
-   deaths; 3% round win rate). Proposed: exclude them. Not yet decided or built.
-4. Parser: tick rate hard-coded to 64 (checked on one demo, not read from the file); match date
+4. `rounds_cost` uses a different comparison set per detector, so cross-detector ranking is approximate.
+5. Parser: tick rate hard-coded to 64 (checked on one demo, not read from the file); match date
    is empty (sorted by match id in file name); split demos (`-p1`/`-p2`) would load as two matches.
+
+Built 16 Nov 2026: `untraded_death` excludes deaths when the team is already outnumbered, and
+compares like for like (SPEC 2b, 2c). Effect: Brandon 34 -> 25 events, T/PalaceInterior pattern
+gone (those deaths were mostly a player down); MOUZ events down 31-50%. Still no cards anywhere.
 
 Fixed: both detectors now share the enemy-kill and trade rules (`detectors/common.py`, SPEC 2c).
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Suggested next steps
-- Decide on the outnumbered exclusion for `untraded_death` (problem 3), then re-run on MOUZ.
-  Risk: the idea came from this data, so check it on a second team before trusting it.
+- Stop using pro demos to judge detectors (keep them for parser tests). Get target-skill data:
+  Brandon's ongoing matches plus 3-5 friends at his level, 15-20 matches each, and ask each
+  player whether their card is right. That is both validation data and customer research.
+- The outnumbered exclusion came from pro data: confirm it on target-skill demos.
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
 
 ## Local data

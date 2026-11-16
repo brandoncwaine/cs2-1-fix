@@ -57,13 +57,17 @@ One JSON file per match, from the point of view of one player:
 ## 2b. Detector: untraded_death
 
 - **Trigger (per round):** the player dies to an enemy, at least one teammate is still alive,
-  and the death was not traded (2c).
-  Excluded: last-alive deaths, suicides/world damage, team kills.
+  the player's team is not outnumbered (2c), and the death was not traded (2c).
+  Excluded: last-alive deaths, suicides/world damage, team kills, outnumbered deaths.
 - **Grouping / minimum sample / metric:** same as section 2.
 - **Impact score:** same formula, but the comparison is only the other rounds the player
-  died in (surviving rounds would flatter the comparison).
-- **Known weakness:** on the first 4 real demos 34 of 46 deaths were untraded, so the trigger
-  alone is a weak discriminator; the location grouping does most of the work.
+  died in before their team was outnumbered (like for like: surviving rounds would flatter the
+  comparison, and outnumbered rounds are nearly always lost whatever the player did).
+- **Why the outnumbered exclusion (16 Nov 2026):** on 14 pro Mirage maps, 244 of 679 untraded
+  deaths came when already outnumbered, and those rounds were won 3% of the time (45% otherwise).
+  Caveat: found on pro data; confirm on target-skill demos.
+- **Known weakness:** most deaths are untraded, so the trigger alone is a weak discriminator;
+  the location grouping does most of the work.
 
 ## 2c. Shared rules (`detectors/common.py`)
 
@@ -72,6 +76,9 @@ One JSON file per match, from the point of view of one player:
   the victim's side (`attacker_side == victim_side`, attacker not `world`). The killer dying to
   world damage, their own team or themselves is not a trade. A kill with no `attacker_side` is
   never a trade, so match files must carry `attacker_side` (the parser always writes it).
+- **Outnumbered:** just before the death, the victim's team had fewer players alive than the
+  enemy. Own count = victim + `victim_teammates_alive` (exact). Enemy count = 5 minus enemy deaths
+  earlier in the round (a short-handed enemy is overcounted). Same-instant kills are not earlier.
 
 ## 3. Ranking and output
 

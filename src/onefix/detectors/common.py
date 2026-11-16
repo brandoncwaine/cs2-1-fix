@@ -28,6 +28,21 @@ def is_enemy_kill(k: Kill) -> bool:
     return k.attacker_side != k.victim_side
 
 
+TEAM_SIZE = 5
+
+
+def outnumbered(rnd: Round, death: Kill) -> bool:
+    """The victim's team had fewer players alive than the enemy just before this death.
+
+    Own count is exact (victim + living teammates at the kill tick). Enemy count assumes
+    TEAM_SIZE minus enemy deaths earlier in the round, so a short-handed enemy team is
+    overcounted. Kills at the same instant as the death do not count as earlier."""
+    own = len(death.victim_teammates_alive) + 1
+    enemy_deaths = sum(1 for k in rnd.kills if k.victim_side != death.victim_side
+                       and 0 <= k.t < death.t)
+    return own < TEAM_SIZE - enemy_deaths
+
+
 def was_traded(rnd: Round, death: Kill) -> bool:
     """A teammate of the victim killed the victim's killer within TRADE_WINDOW.
 

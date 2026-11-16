@@ -1,7 +1,8 @@
 """Synthetic match builders. Not real demo data."""
 ME, MATE, ENEMY = "me", "mate", "enemy"
-FAR = [[5000, 0, 0]]
-NEAR = [[300, 0, 0]]
+# Four living teammates (a full team of 5), so deaths are not "outnumbered" by default.
+FAR = [[5000, 0, 0], [5200, 0, 0], [5400, 0, 0], [5600, 0, 0]]
+NEAR = [[300, 0, 0], [5200, 0, 0], [5400, 0, 0], [5600, 0, 0]]
 
 
 def other(side):

@@ -76,3 +76,35 @@ def test_killer_dying_to_own_team_or_world_is_not_a_trade():
 def test_both_detectors_share_one_trade_rule():
     from onefix.detectors import common, isolated_opening_death as iod
     assert ud.TRADE_WINDOW == iod.TRADE_WINDOW == common.TRADE_WINDOW
+
+
+def _mates(n):
+    return [[5000 + 200 * i, 0, 0] for i in range(n)]
+
+
+def test_outnumbered_death_excluded():
+    # 3 of us alive (me + 2) vs 5 of them: already losing the numbers.
+    assert events([rnd(1, kills=[death(mates=_mates(2))])]) == []
+
+
+def test_even_numbers_still_fire():
+    # 3 v 3: two enemies died earlier, I have 2 teammates alive.
+    early = [death(t=5.0 + i, victim=f"e{i}", attacker=MATE, side="CT") for i in range(2)]
+    assert len(events([rnd(1, kills=early + [death(mates=_mates(2))])])) == 1
+
+
+def test_one_down_is_outnumbered():
+    # 4 v 5.
+    assert events([rnd(1, kills=[death(mates=_mates(3))])]) == []
+
+
+def test_enemy_death_at_same_instant_does_not_count_as_earlier():
+    same_time = death(t=20.0, victim="e0", attacker=MATE, side="CT")
+    assert events([rnd(1, kills=[same_time, death(t=20.0, mates=_mates(3))])]) == []
+
+
+def test_outnumbered_rounds_are_left_out_of_comparison():
+    r_out = match_from_dict(match("m", [rnd(1, kills=[death(mates=_mates(1))])])).rounds[0]
+    r_even = match_from_dict(match("m", [rnd(1, kills=[death()])])).rounds[0]
+    assert not ud.comparison_round(r_out, ME)
+    assert ud.comparison_round(r_even, ME)
