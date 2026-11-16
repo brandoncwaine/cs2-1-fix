@@ -69,3 +69,13 @@ test('invited players are added; a bad or repeated one is skipped, not fatal', (
   assert.match(c.skipped[0], /#2: steamid is listed twice/);
   assert.ok(!c.skipped.join().includes('secret-bad-value'));
 });
+
+test('once the owner is in the user database, the top-level player is ignored', () => {
+  const owner = { name: 'Brandon', steamid: ENV.ONEFIX_STEAMID, matchAuthCode: 'WXYZ-EFGHI-JKLM', firstShareCode: ENV.ONEFIX_FIRST_SHARE_CODE };
+  const c = validateConfig({ ...configFromEnv(ENV), ignoreTopLevelPlayer: true, invitedPlayers: [owner] }, 'env');
+  assert.deepEqual(c.players.map((p) => [p.name, p.matchAuthCode]), [['Brandon', 'WXYZ-EFGHI-JKLM']]);
+  assert.deepEqual(c.skipped, []);
+  // The owner deleted their data and nobody else has joined: nothing to sync, not an error.
+  assert.deepEqual(validateConfig({ ...configFromEnv(ENV), ignoreTopLevelPlayer: true, invitedPlayers: [] }, 'env').players, []);
+  assert.throws(() => validateConfig({ webApiKey: ENV.STEAM_WEB_API_KEY, demoDir: '/d' }, 'env'), /no players/);
+});

@@ -24,10 +24,10 @@ def test_users_are_saved_updated_and_exported_for_ingest(tmp_path):
     acc.save(B, "Bob", AUTH, SHARE, "2026-11-16T11:00:00Z")
     acc.save(A, "Annie", "WXYZ-EFGHI-JKLM", SHARE, "2026-11-17T00:00:00Z")
     assert acc.count() == 2 and acc.get(A)["name"] == "Annie" and acc.get("nobody") is None
-    assert export(acc) == [
+    assert export(acc) == {"ignoreTopLevelPlayer": False, "players": [
         {"name": "Annie", "steamid": A, "matchAuthCode": "WXYZ-EFGHI-JKLM", "firstShareCode": SHARE},
         {"name": "Bob", "steamid": B, "matchAuthCode": AUTH, "firstShareCode": SHARE},
-    ]
+    ]}
 
 
 def test_removing_a_user_deletes_their_data_at_the_next_purge(tmp_path):
@@ -91,3 +91,15 @@ def test_steam_check_maps_steams_answers_and_never_raises():
         raise OSError("no network")
 
     assert steam_check("KEY", A, AUTH, SHARE, down) == "unreachable"
+
+
+def test_the_owner_is_copied_in_once_and_never_again(tmp_path):
+    acc = Accounts(tmp_path / "onefix.db")
+    assert acc.import_owner(A, "Brandon", "bad code", SHARE, "t") is False  # left for ingest to report
+    assert acc.count() == 0 and export(acc)["ignoreTopLevelPlayer"] is False
+    assert acc.import_owner(A, "Brandon", AUTH, SHARE, "t") is True
+    assert acc.get(A)["name"] == "Brandon" and export(acc)["ignoreTopLevelPlayer"] is True
+    # The owner deletes their data; the old variables are still set, but must not bring it back.
+    acc.remove(A)
+    assert acc.import_owner(A, "Brandon", AUTH, SHARE, "t2") is False
+    assert acc.get(A) is None and export(acc) == {"ignoreTopLevelPlayer": True, "players": []}

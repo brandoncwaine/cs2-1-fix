@@ -42,7 +42,7 @@ from pathlib import Path
 from urllib.parse import parse_qsl
 
 from onefix import steam_openid
-from onefix.accounts import STEAMID_RE, Accounts, clean_join, steam_check
+from onefix.accounts import OWNER_IMPORTED, STEAMID_RE, Accounts, clean_join, steam_check
 from onefix.publish import DATA_FILE
 
 STATIC = Path(__file__).parent / "static"
@@ -235,7 +235,7 @@ class App:
         values, errors = clean_join(form)
         if errors:
             return 400, {"fields": errors}
-        if not existing:
+        if not existing and me != self.s.owner:  # the owner needs no invite and no free place
             if not self.s.invite:
                 return 403, {"error": "This site is not taking new people right now."}
             if not self.invite_ok(str(form.get("invite") or "").strip()):
@@ -394,7 +394,7 @@ def make_handler(app: App):
                     self._json(403, {"error": "owner only"})
                 else:
                     self._json(200, {"ok": app.remove(str(body.get("steamid") or ""))})
-            elif app.member_name(me) is None:
+            elif app.member_name(me) is None and me != app.s.owner:
                 self._json(403, {"error": "join first"})
             else:
                 self._json(202, {"started": app.syncer.start(), "sync": app.syncer.state()})
@@ -456,7 +456,17 @@ def main() -> None:
         local_user=local_user,
     )
     syncer = Syncer(None if hour is None else ["sh", "scripts/sync.sh"])
-    app = App(settings, Accounts(config_dir / "onefix.db"), syncer)
+    accounts = Accounts(config_dir / "onefix.db")
+    # The owner used to be set up only through environment variables. Copy those codes into the
+    # database once; after that the owner is an ordinary member who also has the owner's view.
+    if settings.owner:
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if accounts.import_owner(settings.owner, env.get("ONEFIX_PLAYER_NAME") or "Me",
+                                 env.get("STEAM_MATCH_AUTH_CODE", ""), env.get("ONEFIX_FIRST_SHARE_CODE", ""), now):
+            print("Owner's codes copied into the user database.", flush=True)
+        if accounts.flag(OWNER_IMPORTED):
+            settings.config_players.pop(settings.owner, None)
+    app = App(settings, accounts, syncer)
     server = ThreadingHTTPServer((host, port), make_handler(app))
     if hour is not None:
         threading.Thread(target=schedule, args=(app, hour), daemon=True).start()

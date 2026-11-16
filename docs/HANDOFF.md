@@ -89,6 +89,10 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   person sees only their own cards; the owner (`ONEFIX_STEAMID`) sees everyone's and can remove
   people. Users live in `/data/config/onefix.db`; `scripts/sync.sh` exports them to the ingest step
   and deletes removed users' parsed matches and fetch history before each sync.
+- The owner is an ordinary member in the database too (copied in once from the environment
+  variables at start-up; flag `owner_imported` in `onefix.db`). After that `STEAM_MATCH_AUTH_CODE`,
+  `ONEFIX_FIRST_SHARE_CODE` and `ONEFIX_PLAYER_NAME` are ignored; `ONEFIX_STEAMID` still says who
+  the owner is. The owner needs no invite code and does not count against a full site.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).

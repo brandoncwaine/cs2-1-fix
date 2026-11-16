@@ -85,7 +85,7 @@ export function emptyPlayerState() {
  *  were supported is one player's state at the top level: it belongs to the first player. */
 export function migrateState(raw, primarySteamid) {
   if (raw?.players) return raw;
-  if (raw?.matches) {
+  if (raw?.matches && primarySteamid) {
     return { players: { [primarySteamid]: { lastCode: raw.lastCode ?? null, matches: raw.matches } } };
   }
   return emptyState();

@@ -65,7 +65,11 @@ export function loadConfig() {
   const c = fromEnv ?? JSON.parse(readFileSync(CONFIG, 'utf8'));
   // People who joined on the website (scripts/sync.sh exports them from the user database).
   const file = process.env.ONEFIX_PLAYERS_FILE;
-  if (file && existsSync(file)) c.invitedPlayers = JSON.parse(readFileSync(file, 'utf8'));
+  if (file && existsSync(file)) {
+    const exported = JSON.parse(readFileSync(file, 'utf8'));
+    c.invitedPlayers = Array.isArray(exported) ? exported : exported.players ?? [];
+    c.ignoreTopLevelPlayer = exported.ignoreTopLevelPlayer === true;
+  }
   const config = validateConfig(c, fromEnv ? 'the environment variables' : CONFIG);
   for (const note of config.skipped) console.log(`Skipping invited player: ${note}`);
   return config;
@@ -86,6 +90,8 @@ function playerProblems(p, seen) {
  * Check the raw config and return it in one shape: { webApiKey, demoDir, players: [...] }.
  * The top-level steamid / matchAuthCode / firstShareCode are the first player; `players`
  * lists any others. One Web API key reads every player's match history.
+ * `ignoreTopLevelPlayer`: the owner has moved into the website's user database, so the
+ * top-level fields are out of date and are not used.
  * `invitedPlayers` joined through the website: a bad or repeated one is skipped (listed in
  * `skipped`) instead of stopping everyone's sync.
  * Error messages name the field, never its value.
@@ -96,12 +102,13 @@ export function validateConfig(c, where) {
   if (!c.demoDir) problems.push('demoDir is missing');
 
   const players = [];
-  if (c.steamid || c.matchAuthCode || c.firstShareCode) {
+  if (!c.ignoreTopLevelPlayer && (c.steamid || c.matchAuthCode || c.firstShareCode)) {
     players.push({ name: c.name || 'Me', steamid: c.steamid, matchAuthCode: c.matchAuthCode, firstShareCode: c.firstShareCode });
   }
   if (c.players !== undefined && !Array.isArray(c.players)) problems.push('players must be a list');
   else players.push(...(c.players ?? []));
-  if (!players.length) problems.push('no players: set steamid, matchAuthCode and firstShareCode');
+  // With a user database there may be nobody yet (or the owner deleted their data): not an error.
+  if (!players.length && !Array.isArray(c.invitedPlayers)) problems.push('no players: set steamid, matchAuthCode and firstShareCode');
 
   const seen = new Set();
   players.forEach((p, i) => {

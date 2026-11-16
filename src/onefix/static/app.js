@@ -215,7 +215,7 @@ function joinForm(me) {
     el('li', '', 'Copy the share code of your most recent match from the same page.'));
   form.append(steps);
 
-  if (!updating) field(form, 'invite', 'Invite code', 'From the person who invited you.', { type: 'password' });
+  if (!updating && !me.owner) field(form, 'invite', 'Invite code', 'From the person who invited you.', { type: 'password' });
   const name = field(form, 'name', 'Name to show', '', { maxLength: 40 });
   if (me.name) name.value = me.name;
   field(form, 'auth_code', 'Match history authentication code', 'Looks like XXXX-XXXXX-XXXX.');
@@ -300,7 +300,7 @@ function renderAccount() {
   const box = document.getElementById('account');
   box.replaceChildren();
   const { me, viewing, players } = state;
-  if (!me.joined || editing) return;
+  if (editing || (!me.joined && viewing === me.steamid)) return;
   if (viewing === me.steamid) {
     box.append(el('span', 'who', `Signed in as ${me.name}`));
     if (me.invited) {
@@ -329,7 +329,7 @@ function renderAccount() {
 function render() {
   const { me, sync, player, players, viewing } = state;
   const syncButton = document.getElementById('sync');
-  syncButton.hidden = !sync.enabled || !me.joined;
+  syncButton.hidden = !sync.enabled || !(me.joined || me.owner);
   syncButton.disabled = sync.running;
   syncButton.textContent = sync.running ? 'Syncing…' : 'Sync now';
   const synced = document.getElementById('synced');
@@ -350,8 +350,9 @@ function render() {
   const main = document.getElementById('main');
   main.replaceChildren();
   if (notice) main.append(el('p', 'notice', notice));
-  if (!me.joined || editing) {
-    if (me.joined || state.joining_open) {
+  const mine = viewing === me.steamid;
+  if ((!me.joined && mine) || editing) {
+    if (me.joined || me.owner || state.joining_open) {
       main.append(joinForm(me));
     } else {
       const closed = el('div', 'empty');

@@ -34,7 +34,12 @@ CREATE TABLE IF NOT EXISTS users (
   share_code TEXT NOT NULL, created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS removed (steamid TEXT PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
+# Set once the owner's codes have been copied from the environment variables into the database.
+# From then on the database is the only source for the owner, so the owner can change or delete
+# their codes on the site like anyone else, even while the old variables are still set.
+OWNER_IMPORTED = "owner_imported"
 
 
 def clean_join(form: dict) -> tuple[dict, dict]:
@@ -126,11 +131,36 @@ class Accounts:
         with self._db() as db:
             db.execute("DELETE FROM removed WHERE steamid = ?", (steamid,))
 
+    def flag(self, key: str) -> bool:
+        with self._db() as db:
+            return db.execute("SELECT 1 FROM meta WHERE key = ?", (key,)).fetchone() is not None
 
-def export(accounts: Accounts) -> list[dict]:
-    """Users in the shape the ingest config uses."""
-    return [{"name": u["name"], "steamid": u["steamid"], "matchAuthCode": u["auth_code"],
-             "firstShareCode": u["share_code"]} for u in accounts.all()]
+    def set_flag(self, key: str) -> None:
+        with self._db() as db:
+            db.execute("INSERT OR IGNORE INTO meta VALUES (?, '1')", (key,))
+
+    def import_owner(self, steamid: str, name: str, auth_code: str, share_code: str, now: str) -> bool:
+        """Copy the owner's codes in from the environment variables, once. True if copied.
+        Codes that do not look right are left alone (the ingest step reports them)."""
+        if self.flag(OWNER_IMPORTED):
+            return False
+        values, errors = clean_join({"name": name, "auth_code": auth_code, "share_code": share_code})
+        if errors or not STEAMID_RE.fullmatch(steamid or ""):
+            return False
+        if self.get(steamid) is None:
+            self.save(steamid, values["name"], values["auth_code"], values["share_code"], now)
+        self.set_flag(OWNER_IMPORTED)
+        return True
+
+
+def export(accounts: Accounts) -> dict:
+    """Users in the shape the ingest config uses. `ignoreTopLevelPlayer` tells the ingest step
+    that the owner now lives here, so the owner's old environment variables must not be used."""
+    return {
+        "ignoreTopLevelPlayer": accounts.flag(OWNER_IMPORTED),
+        "players": [{"name": u["name"], "steamid": u["steamid"], "matchAuthCode": u["auth_code"],
+                     "firstShareCode": u["share_code"]} for u in accounts.all()],
+    }
 
 
 def purge(accounts: Accounts, state_file: Path, parsed_dir: Path) -> list[str]:
@@ -167,7 +197,7 @@ def main() -> None:
     args = ap.parse_args()
     if not Path(args.db).exists():  # nobody has joined yet
         if args.command == "export":
-            print("[]")
+            print(json.dumps({"ignoreTopLevelPlayer": False, "players": []}))
         return
     accounts = Accounts(Path(args.db))
     if args.command == "export":

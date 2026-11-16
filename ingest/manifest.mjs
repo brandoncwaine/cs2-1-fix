@@ -6,5 +6,5 @@ import { loadConfig, loadState } from './lib/config.js';
 import { buildManifest } from './lib/core.js';
 
 const config = loadConfig();
-const state = loadState(config.players[0].steamid);
+const state = loadState(config.players[0]?.steamid);
 console.log(JSON.stringify(buildManifest(config, state, existsSync), null, 2));

@@ -86,6 +86,10 @@ async function download(url, demoDir) {
 
 async function main() {
   const config = loadConfig();
+  if (!config.players.length) {
+    console.log('No players to sync.');
+    return;
+  }
   const demoDir = config.demoDir.replace(/^~(?=\/)/, process.env.HOME);
   const state = loadState(config.players[0].steamid);
   const now = () => new Date().toISOString();

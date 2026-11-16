@@ -59,17 +59,21 @@ Variables on the service:
 | Variable | Secret? | Value |
 |---|---|---|
 | `ONEFIX_INVITE_CODE` | **yes** | code a new person must enter to join (`ONEFIX_WEB_PASSWORD` is used if this is not set). Without either, nobody new can join |
-| `ONEFIX_STEAMID` | no | your steamid64: the first player, and the site's owner |
-| `ONEFIX_PLAYER_NAME` | no | your name on the site (default "Me") |
-| `ONEFIX_FIRST_SHARE_CODE` | no | share code to start from |
+| `ONEFIX_STEAMID` | no | your steamid64: the site's owner |
+| `ONEFIX_PLAYER_NAME` | no | first start only: your name on the site (default "Me") |
+| `ONEFIX_FIRST_SHARE_CODE` | no | first start only: share code to start from |
 | `STEAM_WEB_API_KEY` | **yes** | Web API key (also used to check a new person's codes) |
-| `STEAM_MATCH_AUTH_CODE` | **yes** | your match history auth code |
+| `STEAM_MATCH_AUTH_CODE` | **yes** | first start only: your match history auth code |
 | `BOT_REFRESH_TOKEN` | **yes** | contents of `~/.config/onefix/bot-refresh-token` |
 | `PORT` | no | the port the public domain routes to (8080) |
 | `ONEFIX_MAX_USERS` | no | optional: most people who may join by invite (default 10) |
 | `ONEFIX_BASE_URL` | no | optional: public address; defaults to Railway's public domain |
 | `ONEFIX_PLAYERS` | **yes** | optional: players listed by hand, as JSON on one line |
 | `ONEFIX_SYNC_HOUR_UTC` | no | optional: hour of the daily sync (default 6), or `off` |
+
+The three "first start only" values are copied into the user database the first time the
+site starts. After that the owner changes their name and codes on the site ("Update my codes")
+like anyone else, and those variables are ignored and can be deleted.
 
 Set the secret ones yourself in the Railway dashboard. `BOT_REFRESH_TOKEN` only seeds the
 first run: renewed tokens are saved to `/data/config/` and used from then on. Renewal makes

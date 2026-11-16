@@ -261,3 +261,21 @@ def test_config_players_come_from_the_environment():
            "ONEFIX_PLAYERS": json.dumps([{"name": "Sam", "steamid": ANN}, {"steamid": "bad"}, "junk"])}
     assert web.config_players(env) == {OWNER: "Brandon", ANN: "Sam"}
     assert web.config_players({"ONEFIX_PLAYERS": "not json"}) == {}
+
+
+def test_an_owner_in_the_database_manages_their_account_like_anyone_else(site):
+    base, app = site(config_players={})  # what main() leaves once the owner has been copied in
+    app.accounts.save(OWNER, "Brandon", AUTH, SHARE, "t")
+    app.accounts.save(ANN, "Ann", AUTH, SHARE, "t")
+    app.accounts.save(BOB, "Bob", AUTH, SHARE, "t")  # the site is now over its limit of 2
+    _, _, body = call(base, "/api/data", who=OWNER)
+    assert body["me"] == {"steamid": OWNER, "name": "Brandon", "joined": True, "owner": True, "invited": True}
+    assert [p["name"] for p in body["players"]] == ["Brandon", "Ann", "Bob"]
+
+    assert call(base, "/api/leave", body={}, who=OWNER)[2] == {"ok": True}
+    _, _, body = call(base, f"/api/data?player={ANN}", who=OWNER)
+    assert body["me"]["joined"] is False and body["me"]["owner"] is True
+    assert body["player"]["steamid"] == ANN  # still the owner: can still see members
+    # Rejoining needs no invite code and no free place.
+    status, _, _ = call(base, "/api/join", body={**JOIN, "invite": "", "name": "Brandon"}, who=OWNER)
+    assert status == 200 and app.accounts.get(OWNER)["name"] == "Brandon"
