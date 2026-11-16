@@ -21,6 +21,7 @@ ENV ONEFIX_PYTHON=/opt/venv/bin/python \
     ONEFIX_DEMO_DIR=/data/demos \
     ONEFIX_PARSED_DIR=/data/parsed \
     ONEFIX_WEB_DIR=/data/web \
+    ONEFIX_HOST=0.0.0.0 \
     PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1
 

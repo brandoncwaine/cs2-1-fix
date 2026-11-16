@@ -29,6 +29,9 @@ Kept one fix per map and side after the pro-demo results showed it needs ~15 map
 ## D8 — Frontend: private site for Brandon and a few friends, one always-on service (2026-11-16)
 A small website shows each player's cards. Audience is Brandon plus 3-5 friends (the validation group from the handoff), not the public: one shared password, everyone sees every player. Friends are added by Brandon in the config (steamid64, match auth code, one share code each); there is no sign-up. The Railway cron became one always-on service that serves the site and runs the daily sync itself, because a Railway volume attaches to one service and a cron service is off between runs. Stdlib Python server, no framework, no database. Public sign-up (Steam login, per-user storage, privacy policy) is deliberately not built yet.
 
+## D9 — Real accounts: Steam sign-in, invite only (2026-11-16)
+Supersedes the shared password and "no sign-up" parts of D8. People sign in through Steam (OpenID), which gives a verified steamid64 and means the site never handles a password. A new person needs an invite code, then enters their own match auth code and share code, which are checked with Steam before saving. Each person sees only their own cards; the owner sees everyone's (needed to ask each player whether their card is right) and this is stated on the join form. Anyone can delete their own data. Built ourselves on the standard library with SQLite on the volume: hosted auth services were rejected because they do not provide Steam identity, so the Steam step would still be ours. Capped at 10 invited people by default. Still not public: opening it up needs a privacy policy, the bot-account terms check (D7) and a storage plan.
+
 ## Open (not decided)
 - Check Steam's terms on bot accounts (D7). FACEIT auto-import looks unlikely.
 - Benchmarks from a rank-matched or pro demo corpus as a v2 evidence base (source and licensing unresearched).

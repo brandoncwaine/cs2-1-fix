@@ -11,13 +11,22 @@ PY="${ONEFIX_PYTHON:-.venv/bin/python}"
 PARSED="${ONEFIX_PARSED_DIR:-parsed/own}"
 WEB="${ONEFIX_WEB_DIR:-parsed/web}"
 
+# People who joined on the website live in a database in the private config folder. First finish
+# deleting anyone who was removed, then hand the rest to the ingest step in a private temp file.
+CONFIG="${ONEFIX_CONFIG_DIR:-$HOME/.config/onefix}"
+MANIFEST=$(mktemp)
+INVITED=$(mktemp)
+trap 'rm -f "$MANIFEST" "$INVITED"' EXIT
+PYTHONPATH=src "$PY" -m onefix.accounts purge \
+  --db "$CONFIG/onefix.db" --state "$CONFIG/ingest-state.json" --parsed "$PARSED"
+PYTHONPATH=src "$PY" -m onefix.accounts export --db "$CONFIG/onefix.db" > "$INVITED"
+export ONEFIX_PLAYERS_FILE="$INVITED"
+
 # A failed fetch (Steam down, one player's auth code revoked) must not stop the cards being
 # rebuilt from what we already have; the script still exits 1 at the end.
 status=0
 (cd ingest && node sync.mjs) || status=1
 
-MANIFEST=$(mktemp)
-trap 'rm -f "$MANIFEST"' EXIT
 (cd ingest && node manifest.mjs) > "$MANIFEST"
 
 PYTHONPATH=src "$PY" -m onefix.publish \

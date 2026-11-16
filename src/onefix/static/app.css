@@ -79,10 +79,32 @@ dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 details .note { margin-top: 10px; color: var(--muted); }
 
 .foot { margin-top: 40px; font-size: 13px; }
+.small { font-size: 13px; }
+a { color: inherit; }
+a.button { display: block; padding: 10px; border-radius: 8px; text-align: center; text-decoration: none; }
+a.button.primary { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+
+.join { max-width: 560px; margin-top: 24px; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.join h2 { font-size: 20px; }
+.join > p { margin-top: 8px; }
+.join ol { margin: 12px 0 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
+.join label { display: block; margin: 18px 0 6px; font-size: 14px; font-weight: 600; }
+.join input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.join input[aria-invalid="true"] { border-color: var(--warn-text); }
+.join .hint { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.join .field-error { margin-top: 6px; font-size: 14px; color: var(--warn-text); }
+.join .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.join .promise { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
+.account:empty { display: none; }
+.account .who { margin-right: auto; color: var(--muted); }
+button.danger { color: var(--warn-text); }
 
 body.login { display: grid; place-items: center; min-height: 100vh; padding-bottom: 0; }
 .login-box { width: 100%; max-width: 360px; padding: 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
 .login-box .muted { margin: 6px 0 20px; font-size: 14px; }
+.login-box .small { margin: 16px 0 0; font-size: 13px; }
 .login-box label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
 .login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .login-box button { width: 100%; margin-top: 16px; padding: 10px; }

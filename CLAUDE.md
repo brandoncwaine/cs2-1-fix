@@ -15,13 +15,14 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - Use the project venv (`.venv`, Python 3.12; system Python is 3.9). `python` below means `.venv/bin/python`.
 - Tests: `python -m pytest` from repo root.
 - CLI: `PYTHONPATH=src python -m onefix.cli --steamid <id> fixtures/*.json`
-- Website, local preview: `ONEFIX_SYNC_HOUR_UTC=off PYTHONPATH=src python -m onefix.web` (http://127.0.0.1:8000)
+- Website, local preview: `ONEFIX_LOCAL_USER=<id> ONEFIX_STEAMID=<id> ONEFIX_SYNC_HOUR_UTC=off PYTHONPATH=src python -m onefix.web` (http://127.0.0.1:8000)
 - Parse demos: `PYTHONPATH=src python -m onefix.parse_demo --steamid <id> --out parsed demos/*.dem`
 - Never commit `.dem` files or `parsed/` output: they contain other players' Steam IDs.
 - `ingest/` is a separate Node 20+ package (steam-user, globaloffensive): `npm test` there.
   Its secrets live in `~/.config/onefix/`, never in the repo. Full run: `scripts/sync.sh`.
 - Never type, store or log anyone's Steam password. The bot's first login is run by the user.
-- The site's data file and page carry no secrets, no share codes and no Steam IDs except the listed players' own.
+- The site shows each person only their own cards (the owner sees all). Its data file and page carry no secrets and no share codes.
+- Users' match auth codes live only in `onefix.db` in the private config folder; never log them or send them to the page.
 
 ## Layout
 - `src/onefix/models.py`   normalised match schema (parser-independent)
@@ -29,7 +30,8 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`, `missed_trade`, `repeek_death`); shared rules in `common.py`
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
 - `src/onefix/publish.py`  per player: parse new demos, build cards, write the site's `data.json`
-- `src/onefix/web.py`      private site (shared password) + daily sync scheduler; page in `src/onefix/static/`
+- `src/onefix/web.py`      invite-only site (Steam sign-in) + daily sync scheduler; page in `src/onefix/static/`
+- `src/onefix/steam_openid.py` Steam sign-in check; `src/onefix/accounts.py` invited users (SQLite in the config folder)
 - `ingest/`                share codes -> bot account -> game coordinator -> demo download (see ingest/README.md)
 - `scripts/sync.sh`        fetch new demos for every player, parse, write the site's data (run daily by `web.py`)
 - `Dockerfile`, `railway.json` always-on Railway service: site + daily sync (volume at /data; see ingest/README.md)

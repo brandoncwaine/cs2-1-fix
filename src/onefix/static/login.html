@@ -11,12 +11,10 @@
 <main class="login-box">
   <h1 class="wordmark">One<span>-</span>Fix</h1>
   <p class="muted">One thing to fix per map and side, from your own matches.</p>
-  <form method="post" action="/login">
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
-    <!--ERROR-->
-    <button type="submit" class="primary">Sign in</button>
-  </form>
+  <!--ERROR-->
+  <a class="button primary" href="/auth/steam">Sign in through Steam</a>
+  <p class="muted small">You sign in on Steam's own site. This site never sees your password; it only
+  learns which Steam account you are. Invite only. Not affiliated with Valve.</p>
 </main>
 </body>
 </html>

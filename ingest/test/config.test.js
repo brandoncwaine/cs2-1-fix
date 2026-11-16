@@ -58,3 +58,14 @@ test('a bad or repeated player is reported by position, without echoing values',
 test('ONEFIX_PLAYERS that is not JSON fails without echoing it', () => {
   assert.throws(() => configFromEnv({ ONEFIX_PLAYERS: '[{secret' }), (e) => !e.message.includes('secret'));
 });
+
+test('invited players are added; a bad or repeated one is skipped, not fatal', () => {
+  const ok = { name: 'Kim', steamid: '76561190000000002', matchAuthCode: 'ABCD-EFGHI-JKLM', firstShareCode: ENV.ONEFIX_FIRST_SHARE_CODE };
+  const repeat = { ...ok, name: 'Owner again', steamid: ENV.ONEFIX_STEAMID };
+  const bad = { ...ok, steamid: '76561190000000003', matchAuthCode: 'secret-bad-value' };
+  const c = validateConfig({ ...configFromEnv(ENV), invitedPlayers: [ok, repeat, bad] }, 'env');
+  assert.deepEqual(c.players.map((p) => p.name), ['Me', 'Kim']);
+  assert.equal(c.skipped.length, 2);
+  assert.match(c.skipped[0], /#2: steamid is listed twice/);
+  assert.ok(!c.skipped.join().includes('secret-bad-value'));
+});

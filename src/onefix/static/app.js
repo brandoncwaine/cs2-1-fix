@@ -7,7 +7,11 @@ const DETECTOR_TITLES = {
 };
 const POLL_MS = 5000;
 
-let state = { data: null, sync: { enabled: false, running: false, last_ok: null } };
+const MATCH_HISTORY_HELP = 'https://help.steampowered.com/en/wizard/HelpWithGameIssue/?appid=730&issueid=128';
+
+let state = null;
+let editing = false; // the signed-in person is changing their codes
+let confirming = null; // which delete button is showing "Are you sure?"
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -127,9 +131,7 @@ function problemText(p) {
   return out;
 }
 
-function renderPlayer(player) {
-  const main = document.getElementById('main');
-  main.replaceChildren();
+function renderPlayer(player, main) {
   const fixes = player.cards.filter((c) => c.status === 'fix').length;
   main.append(el('p', 'summary muted',
     `${plural(player.matches, 'match', 'matches')} · ${plural(player.rounds, 'round')} · ${plural(fixes, 'fix', 'fixes')}`));
@@ -168,47 +170,211 @@ function renderPlayer(player) {
   }
 }
 
-function selectedPlayer(players) {
-  const wanted = decodeURIComponent(location.hash.slice(1));
-  return players.find((p) => p.steamid === wanted) || players[0];
+async function post(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'X-Onefix': '1', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  if (res.status === 401) { location.href = '/login'; return null; }
+  return { status: res.status, body: await res.json().catch(() => ({})) };
+}
+
+function field(form, name, label, hint, attrs = {}) {
+  const id = `f-${name}`;
+  const lab = el('label', '', label);
+  lab.htmlFor = id;
+  const input = el('input');
+  Object.assign(input, { id, name, required: true, autocomplete: 'off', spellcheck: false }, attrs);
+  form.append(lab, input);
+  if (hint) form.append(el('p', 'hint', hint));
+  const error = el('p', 'field-error');
+  error.id = `${id}-error`;
+  error.hidden = true;
+  form.append(error);
+  return input;
+}
+
+function joinForm(me) {
+  const updating = me.joined;
+  const form = el('form', 'join');
+  form.noValidate = true;
+  form.append(el('h2', '', updating ? 'Update your codes' : 'Connect your matches'));
+  form.append(el('p', 'muted', updating
+    ? 'Use this if you made a new authentication code on Steam, or want a different name.'
+    : 'You are signed in. To find your matches, this site needs two codes from Steam.'));
+  const steps = el('ol');
+  const first = el('li');
+  const link = el('a', '', "Open Steam's match history page");
+  link.href = MATCH_HISTORY_HELP;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  first.append(link, ' and sign in.');
+  steps.append(first,
+    el('li', '', 'Create an authentication code and copy it.'),
+    el('li', '', 'Copy the share code of your most recent match from the same page.'));
+  form.append(steps);
+
+  if (!updating) field(form, 'invite', 'Invite code', 'From the person who invited you.', { type: 'password' });
+  const name = field(form, 'name', 'Name to show', '', { maxLength: 40 });
+  if (me.name) name.value = me.name;
+  field(form, 'auth_code', 'Match history authentication code', 'Looks like XXXX-XXXXX-XXXX.');
+  field(form, 'share_code', 'Share code of a recent match', 'Looks like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx. Matches after this one are fetched.');
+
+  const general = el('p', 'notice');
+  general.hidden = true;
+  general.setAttribute('role', 'alert');
+  form.append(general);
+  const actions = el('div', 'actions');
+  const submit = el('button', 'primary', updating ? 'Save' : 'Connect');
+  submit.type = 'submit';
+  actions.append(submit);
+  if (updating) {
+    const cancel = el('button', '', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', () => { editing = false; render(); });
+    actions.append(cancel);
+  }
+  form.append(actions);
+  form.append(el('p', 'promise',
+    'Never type your Steam password here: this site does not ask for it. The codes only let it read your '
+    + 'match list. You see only your own results; the site owner can see them too. You can delete your data '
+    + 'at any time, and making a new authentication code on Steam cuts off access.'));
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submit.disabled = true;
+    submit.textContent = 'Checking with Steam…';
+    general.hidden = true;
+    const values = Object.fromEntries(new FormData(form).entries());
+    const res = await post('/api/join', values).catch(() => ({ status: 0, body: {} }));
+    if (!res) return;
+    submit.disabled = false;
+    submit.textContent = updating ? 'Save' : 'Connect';
+    const problems = res.body.fields || {};
+    let firstBad = null;
+    for (const input of form.querySelectorAll('input')) {
+      const error = document.getElementById(`${input.id}-error`);
+      const text = problems[input.name];
+      error.hidden = !text;
+      error.textContent = text || '';
+      input.setAttribute('aria-invalid', String(Boolean(text)));
+      if (text) input.setAttribute('aria-describedby', error.id); else input.removeAttribute('aria-describedby');
+      if (text && !firstBad) firstBad = input;
+    }
+    if (firstBad) { firstBad.focus(); return; }
+    if (res.status !== 200) {
+      general.textContent = res.body.error || 'That did not work. Try again in a minute.';
+      general.hidden = false;
+      return;
+    }
+    editing = false;
+    notice = res.body.warning || (updating ? 'Saved.' : 'Connected. Your first sync has started; it takes a few minutes per match.');
+    load().catch(showError);
+  });
+  return form;
+}
+
+let notice = '';
+
+function confirmButton(key, label, question, action) {
+  const wrap = el('span');
+  if (confirming !== key) {
+    const b = el('button', 'quiet danger', label);
+    b.type = 'button';
+    b.addEventListener('click', () => { confirming = key; render(); });
+    wrap.append(b);
+    return wrap;
+  }
+  const yes = el('button', 'danger', 'Yes, delete');
+  yes.type = 'button';
+  yes.addEventListener('click', async () => { confirming = null; yes.disabled = true; await action(); });
+  const no = el('button', '', 'Cancel');
+  no.type = 'button';
+  no.addEventListener('click', () => { confirming = null; render(); });
+  wrap.append(el('span', 'muted', `${question} `), yes, ' ', no);
+  return wrap;
+}
+
+function renderAccount() {
+  const box = document.getElementById('account');
+  box.replaceChildren();
+  const { me, viewing, players } = state;
+  if (!me.joined || editing) return;
+  if (viewing === me.steamid) {
+    box.append(el('span', 'who', `Signed in as ${me.name}`));
+    if (me.invited) {
+      const edit = el('button', 'quiet', 'Update my codes');
+      edit.type = 'button';
+      edit.addEventListener('click', () => { editing = true; render(); });
+      box.append(edit, confirmButton('leave', 'Delete my data', 'Delete your matches, cards and codes?', async () => {
+        await post('/api/leave');
+        notice = 'Your data is being deleted.';
+        load().catch(showError);
+      }));
+    }
+    return;
+  }
+  const other = (players || []).find((p) => p.steamid === viewing);
+  if (other && other.invited) {
+    box.append(el('span', 'who', `Viewing ${other.name}`));
+    box.append(confirmButton('remove', 'Remove this person', `Delete ${other.name}'s matches, cards and codes?`, async () => {
+      await post('/api/remove', { steamid: viewing });
+      location.hash = '';
+      load().catch(showError);
+    }));
+  }
 }
 
 function render() {
-  const { data, sync } = state;
+  const { me, sync, player, players, viewing } = state;
   const syncButton = document.getElementById('sync');
-  syncButton.hidden = !sync.enabled;
+  syncButton.hidden = !sync.enabled || !me.joined;
   syncButton.disabled = sync.running;
   syncButton.textContent = sync.running ? 'Syncing…' : 'Sync now';
   const synced = document.getElementById('synced');
-  synced.textContent = data ? syncedText(data.synced_at) : '';
-  if (sync.last_ok === false && !sync.running) synced.textContent += ' · last sync had problems';
+  synced.textContent = state.synced_at && me.joined ? syncedText(state.synced_at) : '';
+  if (sync.last_ok === false && !sync.running && me.joined) synced.textContent += ' · last sync had problems';
 
   const nav = document.getElementById('players');
   nav.replaceChildren();
-  const main = document.getElementById('main');
-  if (!data || !data.players.length) {
-    main.replaceChildren();
-    const empty = el('div', 'empty');
-    empty.append(el('p', '', sync.running ? 'First sync is running…' : 'No data yet.'),
-      el('p', 'muted', 'Downloading and reading demos takes a few minutes per match.'));
-    main.append(empty);
-    return;
-  }
-  const current = selectedPlayer(data.players);
-  nav.hidden = data.players.length < 2;
-  for (const p of data.players) {
+  nav.hidden = !players || players.length < 2 || editing;
+  for (const p of players || []) {
     const b = el('button', '', p.name);
     b.type = 'button';
-    b.setAttribute('aria-pressed', String(p === current));
+    b.setAttribute('aria-pressed', String(p.steamid === viewing));
     b.addEventListener('click', () => { location.hash = p.steamid; });
     nav.append(b);
   }
-  renderPlayer(current);
+
+  const main = document.getElementById('main');
+  main.replaceChildren();
+  if (notice) main.append(el('p', 'notice', notice));
+  if (!me.joined || editing) {
+    if (me.joined || state.joining_open) {
+      main.append(joinForm(me));
+    } else {
+      const closed = el('div', 'empty');
+      closed.append(el('p', '', 'This site is invite only and is not taking new people right now.'),
+        el('p', 'muted', 'Ask the person who sent you the link.'));
+      main.append(closed);
+    }
+  } else if (player) {
+    renderPlayer(player, main);
+  } else {
+    const empty = el('div', 'empty');
+    empty.append(el('p', '', sync.running ? 'Sync is running…' : 'No matches yet.'),
+      el('p', 'muted', 'Downloading and reading demos takes a few minutes per match. This page updates by itself.'));
+    main.append(empty);
+  }
+  renderAccount();
 }
 
 let pollTimer = null;
 async function load() {
-  const res = await fetch('/api/data', { headers: { Accept: 'application/json' } });
+  const wanted = decodeURIComponent(location.hash.slice(1));
+  const query = /^\d{17}$/.test(wanted) ? `?player=${wanted}` : '';
+  const res = await fetch(`/api/data${query}`, { headers: { Accept: 'application/json' } });
   if (res.status === 401) { location.href = '/login'; return; }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   state = await res.json();
@@ -223,9 +389,8 @@ function showError() {
 }
 
 document.getElementById('sync').addEventListener('click', async () => {
-  const res = await fetch('/api/sync', { method: 'POST', headers: { 'X-Onefix': '1' } });
-  if (res.status === 401) { location.href = '/login'; return; }
+  await post('/api/sync');
   load().catch(showError);
 });
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => { notice = ''; confirming = null; load().catch(showError); });
 load().catch(showError);

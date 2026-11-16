@@ -84,9 +84,13 @@ Fixed: both detectors now share the enemy-kill and trade rules (`detectors/commo
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Frontend (built 16 Nov 2026, DECISIONS D8)
-- `onefix.web`: private site behind one shared password, one page per player, one card per
-  map and side (fix / no fix found / not enough rounds). Checked by eye on sample data, since no
-  real player has a fix card yet. Ingestion handles several players (`players` in the config).
+- `onefix.web`: invite-only site (D9). Sign in through Steam, enter the invite code and your own
+  two Steam codes, then one card per map and side (fix / no fix found / not enough rounds). Each
+  person sees only their own cards; the owner (`ONEFIX_STEAMID`) sees everyone's and can remove
+  people. Users live in `/data/config/onefix.db`; `scripts/sync.sh` exports them to the ingest step
+  and deletes removed users' parsed matches and fetch history before each sync.
+- Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
+  data. Not checked: a real Steam sign-in round trip in a browser, and a real friend joining.
 - Live since 16 Nov 2026 on Brandon's personal Railway: https://cs2-1-fix-production.up.railway.app
   (sign-in page, health check and first sync confirmed; signed-in page not checked from here).
 
@@ -100,10 +104,10 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - Domain routes to port 8080 and the variable `PORT=8080` makes the server listen there. Both
   must agree, or the site returns 502.
 - Variables: `PORT`, `ONEFIX_STEAMID`, `ONEFIX_FIRST_SHARE_CODE`, `ONEFIX_WEB_PASSWORD`,
-  `STEAM_WEB_API_KEY`, `STEAM_MATCH_AUTH_CODE`, `BOT_REFRESH_TOKEN`. Not set yet:
-  `ONEFIX_PLAYER_NAME` (the site shows "Me") and `ONEFIX_PLAYERS` (friends). Table in
-  ingest/README.md. Without `ONEFIX_WEB_PASSWORD` the server listens on 127.0.0.1 only and the
-  health check fails; without the two Steam secrets the site runs but every sync fails.
+  `STEAM_WEB_API_KEY`, `STEAM_MATCH_AUTH_CODE`, `BOT_REFRESH_TOKEN`. `ONEFIX_WEB_PASSWORD` is now
+  the invite code (rename to `ONEFIX_INVITE_CODE` when convenient). Not set yet:
+  `ONEFIX_PLAYER_NAME` (the site shows "Me"). Table in
+  ingest/README.md. Without an invite code nobody new can join; without the two Steam secrets the site runs but every sync fails.
 - `railway.json` supplies the builder, health check (`/healthz`) and restart policy. A cron
   schedule set on the service is not removed by leaving it out of the file: clear it in the
   dashboard (Settings > Deploy). `railway environment edit --service-config` (CLI 5.41.3)
@@ -115,8 +119,8 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - Logs: `railway logs --service cs2-1-fix` (the CLI is logged in to the personal account; the
   Railway MCP is on the work account and cannot see this project).
 - Not built: re-check on the site (`cards.recheck` exists but nothing stores the card a player
-  was given, so there is nothing to re-check against yet); a form for friends to add themselves;
-  per-player passwords; match dates (parser writes none).
+  was given, so there is nothing to re-check against yet); match dates (parser writes none);
+  a privacy policy and anything else needed before opening to the public.
 - Volume use grows ~200 MB per match and old demos are never deleted. Parsed matches are kept,
   so demos could be deleted after parsing, but then a parser fix cannot be re-run on them.
 

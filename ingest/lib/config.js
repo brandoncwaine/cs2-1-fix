@@ -63,13 +63,31 @@ export function loadConfig() {
     throw new Error(`Created ${CONFIG}. Fill it in, then run again.`);
   }
   const c = fromEnv ?? JSON.parse(readFileSync(CONFIG, 'utf8'));
-  return validateConfig(c, fromEnv ? 'the environment variables' : CONFIG);
+  // People who joined on the website (scripts/sync.sh exports them from the user database).
+  const file = process.env.ONEFIX_PLAYERS_FILE;
+  if (file && existsSync(file)) c.invitedPlayers = JSON.parse(readFileSync(file, 'utf8'));
+  const config = validateConfig(c, fromEnv ? 'the environment variables' : CONFIG);
+  for (const note of config.skipped) console.log(`Skipping invited player: ${note}`);
+  return config;
+}
+
+function playerProblems(p, seen) {
+  if (!p || typeof p !== 'object') return ['must be an object'];
+  const out = [];
+  if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 40) out.push('name must be 1-40 characters');
+  if (!/^7656\d{13}$/.test(p.steamid ?? '')) out.push('steamid must be a 17-digit steamid64');
+  else if (seen.has(p.steamid)) out.push('steamid is listed twice');
+  if (!/^[0-9A-Z]{4}-[0-9A-Z]{5}-[0-9A-Z]{4}$/i.test(p.matchAuthCode ?? '')) out.push('matchAuthCode must look like XXXX-XXXXX-XXXX');
+  if (!isShareCode(p.firstShareCode)) out.push('firstShareCode must look like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx');
+  return out;
 }
 
 /**
  * Check the raw config and return it in one shape: { webApiKey, demoDir, players: [...] }.
  * The top-level steamid / matchAuthCode / firstShareCode are the first player; `players`
  * lists any others. One Web API key reads every player's match history.
+ * `invitedPlayers` joined through the website: a bad or repeated one is skipped (listed in
+ * `skipped`) instead of stopping everyone's sync.
  * Error messages name the field, never its value.
  */
 export function validateConfig(c, where) {
@@ -88,18 +106,24 @@ export function validateConfig(c, where) {
   const seen = new Set();
   players.forEach((p, i) => {
     const who = players.length > 1 ? `player ${i + 1}: ` : '';
-    if (!p || typeof p !== 'object') return problems.push(`${who}must be an object`);
-    if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 40) problems.push(`${who}name must be 1-40 characters`);
-    if (!/^7656\d{13}$/.test(p.steamid ?? '')) problems.push(`${who}steamid must be a 17-digit steamid64`);
-    else if (seen.has(p.steamid)) problems.push(`${who}steamid is listed twice`);
-    seen.add(p.steamid);
-    if (!/^[0-9A-Z]{4}-[0-9A-Z]{5}-[0-9A-Z]{4}$/i.test(p.matchAuthCode ?? '')) problems.push(`${who}matchAuthCode must look like XXXX-XXXXX-XXXX`);
-    if (!isShareCode(p.firstShareCode)) problems.push(`${who}firstShareCode must look like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx`);
+    problems.push(...playerProblems(p, seen).map((x) => `${who}${x}`));
+    if (p && typeof p === 'object') seen.add(p.steamid);
   });
+  const skipped = [];
+  for (const [i, p] of (Array.isArray(c.invitedPlayers) ? c.invitedPlayers : []).entries()) {
+    const found = playerProblems(p, seen);
+    if (found.length) {
+      skipped.push(`#${i + 1}: ${found.join('; ')}`);
+    } else {
+      seen.add(p.steamid);
+      players.push(p);
+    }
+  }
   if (problems.length) throw new Error(`Fix ${where}:\n  - ${problems.join('\n  - ')}`);
   return {
     webApiKey: c.webApiKey,
     demoDir: c.demoDir,
+    skipped,
     players: players.map((p) => ({
       name: p.name.trim(), steamid: p.steamid, matchAuthCode: p.matchAuthCode, firstShareCode: p.firstShareCode,
     })),
