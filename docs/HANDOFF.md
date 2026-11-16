@@ -93,6 +93,9 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   variables at start-up; flag `owner_imported` in `onefix.db`). After that `STEAM_MATCH_AUTH_CODE`,
   `ONEFIX_FIRST_SHARE_CODE` and `ONEFIX_PLAYER_NAME` are ignored; `ONEFIX_STEAMID` still says who
   the owner is. The owner needs no invite code and does not count against a full site.
+- `/login` is now a landing page for invited people (16 Nov 2026): what the tool does, a sample fix
+  card (the synthetic fixture's output, labelled as made-up), how joining works, what to expect
+  at first, and one action repeated three times: "Sign in through Steam". Still `noindex`.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).
