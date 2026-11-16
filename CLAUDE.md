@@ -34,6 +34,7 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - `scripts/sync.sh`        fetch new demos for every player, parse, write the site's data (run daily by `web.py`)
 - `Dockerfile`, `railway.json` always-on Railway service: site + daily sync (volume at /data; see ingest/README.md)
 - `SPEC.md`                detector catalogue and formats
+- `docs/DETECTOR_IDEAS.md` backlog of candidate detectors (ideas, not spec)
 
 ## Glossary
 - Side: T or CT. Half: the rounds played on one side.

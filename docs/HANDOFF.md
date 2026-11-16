@@ -89,6 +89,8 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   player whether their card is right. That is both validation data and customer research.
 - The outnumbered exclusion came from pro data: confirm it on target-skill demos.
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
+- New detectors: candidates and first picks in `docs/DETECTOR_IDEAS.md` (#3 and #4 need no
+  parser changes).
 
 ## Notes for building a UI (16 Nov 2026)
 - **Input is the card JSON** (`cards` per player in `data.json`; same as `onefix.cli` prints) (built in `src/onefix/cards.py`; formats in SPEC 3).
