@@ -68,7 +68,8 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 ## Suggested next steps
 - Ingestion works end to end (16 Nov 2026): share code -> bot -> GC -> 199 MB demo, named like
   client downloads, parsed, cards printed. Run `scripts/sync.sh` at least weekly (Valve deletes
-  demos after a few weeks); a schedule (launchd) is the next small step.
+  demos after a few weeks). Railway daily cron prepared (Dockerfile, railway.json); deploy
+  to Brandon's personal Railway account pending his login.
 - Stop using pro demos to judge detectors (keep them for parser tests). Get target-skill data:
   Brandon's ongoing matches plus 3-5 friends at his level, 15-20 matches each, and ask each
   player whether their card is right. That is both validation data and customer research.

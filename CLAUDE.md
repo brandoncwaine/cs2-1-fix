@@ -27,7 +27,8 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`); shared trade rules in `common.py`
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
 - `ingest/`                share codes -> bot account -> game coordinator -> demo download (see ingest/README.md)
-- `scripts/sync.sh`        fetch new demos, parse, print cards
+- `scripts/sync.sh`        fetch new demos, parse, print cards (local, and the Railway cron entry point)
+- `Dockerfile`, `railway.json` daily Railway cron image (volume at /data; see ingest/README.md)
 - `SPEC.md`                detector catalogue and formats
 
 ## Glossary

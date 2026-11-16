@@ -32,6 +32,28 @@ scripts/sync.sh          # from the repo root
 Re-running only fetches new matches. Progress is in `~/.config/onefix/ingest-state.json`.
 Valve deletes demos after a few weeks, so run it at least weekly.
 
+## Running on Railway (daily cron)
+
+`Dockerfile` + `railway.json` at the repo root: a cron service runs `scripts/sync.sh` every day
+at 06:00 UTC. Mount a volume at `/data` (config/token, demos, parsed JSON, `cards.json`).
+
+Variables on the service:
+
+| Variable | Secret? | Value |
+|---|---|---|
+| `ONEFIX_STEAMID` | no | main account steamid64 |
+| `ONEFIX_FIRST_SHARE_CODE` | no | share code to start from |
+| `STEAM_WEB_API_KEY` | **yes** | Web API key |
+| `STEAM_MATCH_AUTH_CODE` | **yes** | match history auth code |
+| `BOT_REFRESH_TOKEN` | **yes** | contents of `~/.config/onefix/bot-refresh-token` |
+
+Set the secret ones yourself in the Railway dashboard. `BOT_REFRESH_TOKEN` only seeds the
+first run: renewed tokens are saved to `/data/config/` and used from then on. Renewal makes
+the old token invalid, so once the cloud job renews it, the local copy stops working: run the
+sync in one place only (or `npm run login -- --fresh` locally for a separate session).
+
+Cards print to the deploy logs and are written to `/data/cards.json`.
+
 ## Notes
 
 - Whether Steam's terms allow a bot account for this is unchecked (DECISIONS D7). The risk

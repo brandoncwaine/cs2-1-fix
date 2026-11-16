@@ -31,25 +31,44 @@ export function writePrivate(path, text) {
   chmodSync(path, 0o600);
 }
 
+/** Config from environment variables (cloud), or null if ONEFIX_STEAMID is not set. */
+export function configFromEnv(env = process.env) {
+  if (!env.ONEFIX_STEAMID) return null;
+  return {
+    steamid: env.ONEFIX_STEAMID,
+    webApiKey: env.STEAM_WEB_API_KEY,
+    matchAuthCode: env.STEAM_MATCH_AUTH_CODE,
+    firstShareCode: env.ONEFIX_FIRST_SHARE_CODE,
+    demoDir: env.ONEFIX_DEMO_DIR || '/data/demos',
+  };
+}
+
 export function loadConfig() {
-  if (!existsSync(CONFIG)) {
+  const fromEnv = configFromEnv();
+  if (!fromEnv && !existsSync(CONFIG)) {
     writePrivate(CONFIG, JSON.stringify(CONFIG_TEMPLATE, null, 2) + '\n');
     throw new Error(`Created ${CONFIG}. Fill it in, then run again.`);
   }
-  const c = JSON.parse(readFileSync(CONFIG, 'utf8'));
+  const c = fromEnv ?? JSON.parse(readFileSync(CONFIG, 'utf8'));
+  return validateConfig(c, fromEnv ? 'the environment variables' : CONFIG);
+}
+
+export function validateConfig(c, where) {
   const problems = [];
   if (!/^7656\d{13}$/.test(c.steamid ?? '')) problems.push('steamid must be a 17-digit steamid64');
   if (!/^[0-9A-F]{32}$/i.test(c.webApiKey ?? '')) problems.push('webApiKey must be the 32-character key');
   if (!/^[0-9A-Z]{4}-[0-9A-Z]{5}-[0-9A-Z]{4}$/i.test(c.matchAuthCode ?? '')) problems.push('matchAuthCode must look like XXXX-XXXXX-XXXX');
   if (!isShareCode(c.firstShareCode)) problems.push('firstShareCode must look like CSGO-xxxxx-xxxxx-xxxxx-xxxxx-xxxxx');
   if (!c.demoDir) problems.push('demoDir is missing');
-  if (problems.length) throw new Error(`Fix ${CONFIG}:\n  - ${problems.join('\n  - ')}`);
+  if (problems.length) throw new Error(`Fix ${where}:\n  - ${problems.join('\n  - ')}`);
   return c;
 }
 
+/** Saved token file first (it holds any renewed token), then BOT_REFRESH_TOKEN (cloud seed). */
 export function loadToken() {
-  if (!existsSync(TOKEN)) throw new Error('No bot session yet. Run `npm run login` in ingest/ first.');
-  return readFileSync(TOKEN, 'utf8').trim();
+  if (existsSync(TOKEN)) return readFileSync(TOKEN, 'utf8').trim();
+  if (process.env.BOT_REFRESH_TOKEN) return process.env.BOT_REFRESH_TOKEN.trim();
+  throw new Error('No bot session yet. Run `npm run login` in ingest/ first (or set BOT_REFRESH_TOKEN).');
 }
 
 export function saveToken(token) {

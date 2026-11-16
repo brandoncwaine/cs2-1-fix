@@ -1,0 +1,12 @@
+.git
+.venv
+**/node_modules
+**/__pycache__
+.pytest_cache
+parsed
+fixtures
+tests
+docs
+*.dem
+*.dem.bz2
+*.part
