@@ -1,0 +1,491 @@
+{
+ "match_id": "sample-2",
+ "map": "de_mirage",
+ "date": "2026-11-04",
+ "rounds": [
+  {
+   "num": 1,
+   "side": "T",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 2,
+   "side": "T",
+   "won": false,
+   "kills": [
+    {
+     "t": 23.1,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "Palace",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 3,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 4,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 5,
+   "side": "T",
+   "won": true,
+   "kills": [
+    {
+     "t": 27.3,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "TopofMid",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       350,
+       120,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    },
+    {
+     "t": 29.1,
+     "attacker": "mate",
+     "victim": "enemy",
+     "victim_side": "CT",
+     "attacker_side": "T",
+     "place": "TopofMid",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 6,
+   "side": "T",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 7,
+   "side": "T",
+   "won": false,
+   "kills": [
+    {
+     "t": 21.6,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "Palace",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 8,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 9,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 10,
+   "side": "T",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 11,
+   "side": "T",
+   "won": false,
+   "kills": [
+    {
+     "t": 25.0,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "BombsiteA",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       350,
+       120,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 12,
+   "side": "T",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 13,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 14,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 15,
+   "side": "CT",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 16,
+   "side": "CT",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 17,
+   "side": "CT",
+   "won": false,
+   "kills": [
+    {
+     "t": 27.3,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "CT",
+     "attacker_side": "T",
+     "place": "Ticket",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       350,
+       120,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    },
+    {
+     "t": 29.1,
+     "attacker": "mate",
+     "victim": "enemy",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "Ticket",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 18,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 19,
+   "side": "CT",
+   "won": false,
+   "kills": [
+    {
+     "t": 21.6,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "CT",
+     "attacker_side": "T",
+     "place": "BombsiteA",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 20,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 21,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
+   "num": 22,
+   "side": "CT",
+   "won": false,
+   "kills": []
+  },
+  {
+   "num": 23,
+   "side": "CT",
+   "won": false,
+   "kills": [
+    {
+     "t": 25.0,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "CT",
+     "attacker_side": "T",
+     "place": "BombsiteB",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       350,
+       120,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
+  },
+  {
+   "num": 24,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  }
+ ]
+}

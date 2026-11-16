@@ -33,6 +33,7 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - `src/onefix/web.py`      invite-only site (Steam sign-in) + daily sync scheduler; page in `src/onefix/static/`
 - `src/onefix/steam_openid.py` Steam sign-in check; `src/onefix/accounts.py` invited users (SQLite in the config folder)
 - `ingest/`                share codes -> bot account -> game coordinator -> demo download (see ingest/README.md)
+- `scripts/make_fixtures.py` writes the made-up sample matches in `fixtures/` (all three card states)
 - `scripts/sync.sh`        fetch new demos for every player, parse, write the site's data (run daily by `web.py`)
 - `Dockerfile`, `railway.json` always-on Railway service: site + daily sync (volume at /data; see ingest/README.md)
 - `SPEC.md`                detector catalogue and formats
