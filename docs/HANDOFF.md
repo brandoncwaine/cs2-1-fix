@@ -87,8 +87,33 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 - `onefix.web`: private site behind one shared password, one page per player, one card per
   map and side (fix / no fix found / not enough rounds). Checked by eye on sample data, since no
   real player has a fix card yet. Ingestion handles several players (`players` in the config).
-- Railway service changed from a cron to always-on (site + daily sync at 06:00 UTC). It needs
-  `ONEFIX_WEB_PASSWORD` and a public domain; see ingest/README.md.
+- Live since 16 Nov 2026 on Brandon's personal Railway: https://cs2-1-fix-production.up.railway.app
+  (sign-in page, health check and first sync confirmed; signed-in page not checked from here).
+
+## Railway setup (as of 16 Nov 2026)
+- One always-on service `cs2-1-fix` (not a cron), built from GitHub `main` with the Dockerfile;
+  every push to `main` redeploys. Runs `python -m onefix.web`: the site, plus the sync at start-up
+  when the data is over a day old and daily at 06:00 UTC. IDs are in docs/LOCAL.md.
+- The service was deleted and recreated on 16 Nov 2026 (the old one could not be turned from a
+  cron into a web service from the CLI). The volume `cs2-1-fix-volume` at `/data` was kept and
+  re-attached; its demos and sync state survived.
+- Domain routes to port 8080 and the variable `PORT=8080` makes the server listen there. Both
+  must agree, or the site returns 502.
+- Variables: `PORT`, `ONEFIX_STEAMID`, `ONEFIX_FIRST_SHARE_CODE`, `ONEFIX_WEB_PASSWORD`,
+  `STEAM_WEB_API_KEY`, `STEAM_MATCH_AUTH_CODE`, `BOT_REFRESH_TOKEN`. Not set yet:
+  `ONEFIX_PLAYER_NAME` (the site shows "Me") and `ONEFIX_PLAYERS` (friends). Table in
+  ingest/README.md. Without `ONEFIX_WEB_PASSWORD` the server listens on 127.0.0.1 only and the
+  health check fails; without the two Steam secrets the site runs but every sync fails.
+- `railway.json` supplies the builder, health check (`/healthz`) and restart policy. A cron
+  schedule set on the service is not removed by leaving it out of the file: clear it in the
+  dashboard (Settings > Deploy). `railway environment edit --service-config` (CLI 5.41.3)
+  reported "No changes to apply" for every setting tried; `railway add`, `railway variable set`,
+  `railway volume attach` and `railway domain` worked.
+- Untested: the bot login from the cloud since the service was recreated. The first sync had no
+  new matches, so the bot was not needed. If the logs say "bot login failed", run
+  `npm run login -- --fresh` in `ingest/` and replace `BOT_REFRESH_TOKEN`.
+- Logs: `railway logs --service cs2-1-fix` (the CLI is logged in to the personal account; the
+  Railway MCP is on the work account and cannot see this project).
 - Not built: re-check on the site (`cards.recheck` exists but nothing stores the card a player
   was given, so there is nothing to re-check against yet); a form for friends to add themselves;
   per-player passwords; match dates (parser writes none).
@@ -98,10 +123,7 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
 ## Suggested next steps
 - Ingestion works end to end (16 Nov 2026): share code -> bot -> GC -> 199 MB demo, named like
   client downloads, parsed, cards printed. Run `scripts/sync.sh` at least weekly (Valve deletes
-  demos after a few weeks). Runs on Brandon's personal Railway as a daily cron (06:00 UTC);
-  first cloud run 16 Nov 2026 fetched, parsed and printed cards. IDs in docs/LOCAL.md.
-  railway.json's cronSchedule/restartPolicyType did not apply: set on the service directly.
-  A deploy only installs the cron; it does not run the job.
+  demos after a few weeks). On Railway it now runs daily inside the web service (see Railway setup).
 - Stop using pro demos to judge detectors (keep them for parser tests). Get target-skill data:
   Brandon's ongoing matches plus 3-5 friends at his level, 15-20 matches each, and ask each
   player whether their card is right. That is both validation data and customer research.
