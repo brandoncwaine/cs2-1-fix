@@ -83,7 +83,7 @@ gone (those deaths were mostly a player down); MOUZ events down 31-50%. Still no
 Fixed: both detectors now share the enemy-kill and trade rules (`detectors/common.py`, SPEC 2c).
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
-## Frontend (built 16 Nov 2026, DECISIONS D8)
+## Frontend (built 16 Nov 2026, DECISIONS D8 and D9)
 - `onefix.web`: invite-only site (D9). Sign in through Steam, enter the invite code and your own
   two Steam codes, then one card per map and side (fix / no fix found / not enough rounds). Each
   person sees only their own cards; the owner (`ONEFIX_STEAMID`) sees everyone's and can remove
@@ -94,8 +94,27 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   `ONEFIX_FIRST_SHARE_CODE` and `ONEFIX_PLAYER_NAME` are ignored; `ONEFIX_STEAMID` still says who
   the owner is. The owner needs no invite code and does not count against a full site.
 - `/login` is now a landing page for invited people (16 Nov 2026): what the tool does, a sample fix
-  card (the synthetic fixture's output, labelled as made-up), how joining works, what to expect
+  card (the output for `fixtures/`, labelled as made-up; regenerate with `scripts/make_fixtures.py`
+  and copy the numbers across if the card text changes), how joining works, what to expect
   at first, and one action repeated three times: "Sign in through Steam". Still `noindex`.
+- Signed-in page, as of 16 Nov 2026 (`src/onefix/static/app.js`, `app.css`, no framework, no build):
+  - "Update my codes", "Delete my data" and the owner's "Remove this person" are modal windows
+    (native `<dialog>`, `openModal` / `confirmModal`). Esc, the backdrop and Cancel close them;
+    Cancel has the focus in the delete modals. The first-time join form is still a full page.
+  - Both buttons show for anyone in the database, the owner included (`me.invited` in `/api/data`).
+  - Entrance animations (cards rise in turn, progress bars fill) play only when the view changes:
+    `render()` adds `.enter` to `<main>` when `viewing|kind` differs from last time, so the 5 s
+    refresh during a sync does not replay them. Player tabs are rebuilt only when the people
+    change, and the join form is not rebuilt while it is on screen (it would wipe typed text).
+  - All motion is switched off under `prefers-reduced-motion`. Light and dark themes both exist.
+  - The page's Content-Security-Policy is `default-src 'self'`: no inline scripts or styles in the
+    HTML, no outside fonts or scripts. Keep new code in `app.js` / `app.css`.
+  - A lone player tab is hidden (`[hidden]` is forced to `display: none`; before that fix a
+    `display: flex` rule kept it visible).
+- How the UI was checked: a short Node script drove headless Chrome over the DevTools protocol
+  against a local server (`ONEFIX_LOCAL_USER`, sample `data.json`), clicked each button and took
+  screenshots at 1280 and 390 px, dark and light. Plain `--screenshot` cannot open a modal, and
+  it crops below about 500 px wide. The motion itself was not recorded: judged only by Brandon.
 - Checked: unit tests for the sign-in check, accounts and who-sees-what; screens by eye on sample
   data; Brandon signed in through Steam on the live site as the owner (16 Nov 2026). Not
   checked: a real friend joining (invite code, Steam code check, first sync for a second account).
@@ -159,7 +178,7 @@ A trade must be made by the victim's team. No change in counts on the 4 real dem
   gets only `insufficient_data` / `no_fix_found`. Show progress honestly (rounds needed per
   map-side). Never invent or soften a card to fill the screen (D3).
 - **Example fix card**: `PYTHONPATH=src python -m onefix.cli --steamid me fixtures/*.json`
-  (synthetic data, clearly not real).
+  (made-up data from `scripts/make_fixtures.py`: one fix, one no-fix and two thin cells).
 - **Rules that bind the UI**: every claim links to its evidence rounds (D2); one card per map
   and side (D3, reaffirmed); no Valve / Counter-Strike logos or implied affiliation (D4);
   `stats.note` says the cost is observed, not causal: keep that framing.
