@@ -7,6 +7,9 @@ from pathlib import Path
 
 Pos = tuple[float, float, float]
 
+# Version of the match file format. 2 added `player_pos` / `player_place` on kills.
+SCHEMA = 2
+
 
 @dataclass(frozen=True)
 class Kill:
@@ -18,6 +21,10 @@ class Kill:
     pos: Pos
     victim_teammates_alive: tuple[Pos, ...]
     attacker_side: str | None = None
+    # The analysed player's own position and callout at this kill's tick; None when they
+    # are dead, are the victim, or the file predates schema 2.
+    player_pos: Pos | None = None
+    player_place: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,6 +63,8 @@ def match_from_dict(d: dict) -> Match:
                 pos=_pos(k["pos"]),
                 victim_teammates_alive=tuple(_pos(p) for p in k["victim_teammates_alive"]),
                 attacker_side=k.get("attacker_side"),
+                player_pos=_pos(k["player_pos"]) if k.get("player_pos") else None,
+                player_place=(k.get("player_place") or "unknown") if k.get("player_pos") else None,
             )
             for k in r["kills"]
         )

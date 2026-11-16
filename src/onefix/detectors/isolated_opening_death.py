@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from onefix.detectors.common import TRADE_WINDOW, Event, is_enemy_kill, was_traded
+from onefix.detectors.common import TRADE_RANGE, TRADE_WINDOW, Event, is_enemy_kill, was_traded
 from onefix.models import Kill, Match, Round
 
 __all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
@@ -11,7 +11,7 @@ __all__ = ["TRADE_WINDOW", "Event", "fires", "find_events", "comparison_round"]
 NAME = "isolated_opening_death"
 
 # Provisional threshold. Not yet validated against real demos.
-ISOLATION_DISTANCE = 900.0  # game units to nearest living teammate
+ISOLATION_DISTANCE = TRADE_RANGE  # game units to nearest living teammate
 
 METRIC_NAME = "isolated_opening_deaths_per_100_side_rounds"
 COMPARISON = "the others"

@@ -26,7 +26,7 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 ## Layout
 - `src/onefix/models.py`   normalised match schema (parser-independent)
 - `src/onefix/parse_demo.py` .dem -> normalised match JSON (tests need a real demo; see tests/test_parse_demo.py)
-- `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`); shared trade rules in `common.py`
+- `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`, `missed_trade`, `repeek_death`); shared rules in `common.py`
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
 - `src/onefix/publish.py`  per player: parse new demos, build cards, write the site's `data.json`
 - `src/onefix/web.py`      private site (shared password) + daily sync scheduler; page in `src/onefix/static/`

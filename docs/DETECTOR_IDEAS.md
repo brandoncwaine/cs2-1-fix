@@ -15,7 +15,8 @@ and anything needing a per-map lineup library (no source for one yet).
 ## Data the parser has today
 
 Kills only (`models.Kill`): time, attacker, victim, sides, victim place and position, living
-teammates' positions. Everything else below needs `parse_demo.py` and the schema extended. All
+teammates' positions (not labelled by player), and since schema 2 the analysed player's own
+position and place at each kill. Everything else below needs `parse_demo.py` and the schema extended. All
 of it is available from demoparser2 events or tick fields.
 
 ## Candidates
@@ -25,8 +26,8 @@ of it is available from demoparser2 events or tick fields.
 |---|---|---|---|
 | 1 | Dying alone at first contact | *Built:* `isolated_opening_death` | have it |
 | 2 | Dying where nobody can trade you | *Built:* `untraded_death` (excludes outnumbered deaths) | have it |
-| 3 | **Not trading a teammate** | Teammate dies within trade range of you; you don't kill their killer within `TRADE_WINDOW` | have it (teammate positions at the kill tick) |
-| 4 | **Re-peeking after a kill** | You get a kill, then die at the same place within ~5 s | have it |
+| 3 | **Not trading a teammate** | *Built:* `missed_trade` (SPEC 2d) | have it (schema 2) |
+| 4 | **Re-peeking after a kill** | *Built:* `repeek_death` (SPEC 2e) | have it (schema 2) |
 | 5 | Dying to the same angle repeatedly | Killer positions cluster at one spot across rounds | killer position |
 | 6 | Dying while reloading | A reload started < ~2 s before your death | `weapon_reload` |
 | 7 | Dying while flashed | You are blind at the moment of death | `player_blind` |
@@ -60,12 +61,18 @@ of it is available from demoparser2 events or tick fields.
 Common at lower ranks, unambiguous to detect, easy to explain:
 
 1. **#8 Dying with unused utility**: easy to detect and very common.
-2. **#3 Not trading a teammate**: no new data; the other side of the trade problem.
+2. **#3 Not trading a teammate**: built 16 Nov 2026.
 3. **#9 Flashing your own team**: obvious once the evidence rounds are shown.
-4. **#4 Re-peeking after a kill**: no new data.
+4. **#4 Re-peeking after a kill**: built 16 Nov 2026.
 5. **#17 Shooting while moving**: the most common mechanical fault.
 
-#3 and #4 need no parser changes, so they are the cheapest to build first.
+#3 and #4 were built first. The earlier note that they needed no parser changes was wrong:
+teammate positions in a kill are not labelled, so the parser now also writes the analysed
+player's own position (schema 2). Results on real data are in HANDOFF; both are weak on pro
+demos, and every added detector tightens the confidence gate for all the others (Bonferroni),
+so add detectors that fire rarely and cost a lot, not many loose ones.
+
+Next: #8 (inventory at death) and #9 (`player_blind`), both of which need new parser fields.
 
 ## Open design questions
 

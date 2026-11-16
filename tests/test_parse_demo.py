@@ -72,6 +72,19 @@ def test_player_dies_in_some_rounds(parsed, player):
     assert 0 < len(deaths) <= len(parsed["rounds"])
 
 
+def test_own_position_is_written_only_while_the_player_is_alive(parsed, player):
+    assert parsed["schema"] == 2
+    kills = [k for r in parsed["rounds"] for k in r["kills"]]
+    assert all(k["player_pos"] is None and k["player_place"] is None
+               for k in kills if k["victim"] == player)
+    known = [k for k in kills if k["player_pos"] is not None]
+    assert known and all(len(k["player_pos"]) == 3 and k["player_place"] for k in known)
+    # Alive at the kill tick means not yet dead this round.
+    for r in parsed["rounds"]:
+        died = min((k["t"] for k in r["kills"] if k["victim"] == player), default=1e9)
+        assert all(k["t"] <= died for k in r["kills"] if k["player_pos"] is not None)
+
+
 def test_tickrate_matches_round_timer():
     # A round that ends on time lasts the 115 s round timer; at TICKRATE that is 7360 ticks.
     p = demoparser2.DemoParser(str(DEMO))

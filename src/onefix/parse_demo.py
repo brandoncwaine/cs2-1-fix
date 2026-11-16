@@ -9,6 +9,8 @@ import json
 from bisect import bisect_right
 from pathlib import Path
 
+from onefix.models import SCHEMA
+
 TICKRATE = 64.0
 SIDES = {"TERRORIST": "T", "CT": "CT"}
 
@@ -37,7 +39,7 @@ def demo_to_match(path: str | Path, steamid: str) -> dict:
 
     in_round = deaths[[any(s <= t <= e for s, e, _ in spans) for t in deaths["tick"]]]
     wanted = sorted({s for s, _, _ in spans} | {int(t) for t in in_round["tick"]})
-    ticks = p.parse_ticks(["X", "Y", "Z", "is_alive", "team_name"], ticks=wanted)
+    ticks = p.parse_ticks(["X", "Y", "Z", "is_alive", "team_name", "last_place_name"], ticks=wanted)
     ticks["steamid"] = ticks["steamid"].astype(str)
     by_tick = {int(t): g for t, g in ticks.groupby("tick")}
 
@@ -59,6 +61,9 @@ def demo_to_match(path: str | Path, steamid: str) -> dict:
                 & (snap["steamid"] != victim)
             ]
             attacker = d["attacker_steamid"]
+            # The analysed player's own position, when alive and not the victim.
+            own = snap[(snap["steamid"] == steamid) & snap["is_alive"]]
+            own = None if own.empty or victim == steamid else own.iloc[0]
             kills.append(
                 {
                     "t": round((int(d["tick"]) - start) / TICKRATE, 2),
@@ -71,12 +76,16 @@ def demo_to_match(path: str | Path, steamid: str) -> dict:
                     "victim_teammates_alive": [
                         [round(float(m[a]), 1) for a in "XYZ"] for _, m in mates.iterrows()
                     ],
+                    "player_pos": None if own is None
+                    else [round(float(own[a]), 1) for a in "XYZ"],
+                    "player_place": None if own is None
+                    else (own["last_place_name"] or "unknown"),
                 }
             )
         rounds.append({"num": num, "side": side, "won": winner == side, "kills": kills})
 
     # No date in the demo; match ids in the file name increase over time, so sort on those.
-    return {"match_id": path.stem, "map": map_, "date": "", "rounds": rounds}
+    return {"schema": SCHEMA, "match_id": path.stem, "map": map_, "date": "", "rounds": rounds}
 
 
 def main() -> None:

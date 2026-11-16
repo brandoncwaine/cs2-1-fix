@@ -1,10 +1,11 @@
 import json
 
+from onefix.models import SCHEMA
 from onefix.publish import publish, summary, write_data
 
 
-def _match(match_id: str, rounds: int) -> dict:
-    return {"match_id": match_id, "map": "de_mirage", "date": "",
+def _match(match_id: str, rounds: int, schema: int = SCHEMA) -> dict:
+    return {"schema": schema, "match_id": match_id, "map": "de_mirage", "date": "",
             "rounds": [{"num": i + 1, "side": "T", "won": i % 2 == 0, "kills": []} for i in range(rounds)]}
 
 
@@ -55,6 +56,18 @@ def test_parsed_matches_still_count_after_the_demo_file_is_gone(tmp_path):
     publish(MANIFEST, tmp_path, "t", parse)
     later = {"players": [{**MANIFEST["players"][0], "demos": []}]}
     assert publish(later, tmp_path, "t", parse)["players"][0]["rounds"] == 35
+
+
+def test_matches_in_an_older_format_are_parsed_again_while_the_demo_exists(tmp_path):
+    parse, calls = _fake_parser({"m1": 20, "m2": 15})
+    (tmp_path / "1").mkdir()
+    (tmp_path / "1" / "m1.json").write_text(json.dumps(_match("m1", 20, schema=1)))
+    old_without_demo = {k: v for k, v in _match("gone", 10).items() if k != "schema"}
+    (tmp_path / "1" / "gone.json").write_text(json.dumps(old_without_demo))
+    data = publish(MANIFEST, tmp_path, "t", parse)
+    assert ("m1.dem", "1") in calls
+    assert json.loads((tmp_path / "1" / "m1.json").read_text())["schema"] == SCHEMA
+    assert data["players"][0]["matches"] == 3  # the old match without a demo still counts
 
 
 def test_data_file_is_written_whole_and_summarised(tmp_path):

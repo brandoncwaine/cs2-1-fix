@@ -4,10 +4,12 @@ from __future__ import annotations
 from collections import defaultdict
 from math import comb
 
-from onefix.detectors import isolated_opening_death, untraded_death
+from onefix.detectors import (isolated_opening_death, missed_trade, repeek_death,
+                              untraded_death)
 from onefix.models import Match
 
-DETECTORS = {d.NAME: d for d in (isolated_opening_death, untraded_death)}
+DETECTORS = {d.NAME: d for d in (isolated_opening_death, untraded_death, missed_trade,
+                                 repeek_death)}
 
 MIN_SIDE_ROUNDS = 30
 MIN_PATTERN_ROUNDS = 4

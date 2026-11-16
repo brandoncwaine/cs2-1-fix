@@ -7,6 +7,7 @@ from onefix.models import Kill, Round
 
 # Provisional threshold. Not yet validated against real demos.
 TRADE_WINDOW = 5.0  # seconds
+TRADE_RANGE = 900.0  # game units: close enough that a teammate could plausibly trade
 
 
 @dataclass(frozen=True)

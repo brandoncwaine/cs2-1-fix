@@ -9,6 +9,7 @@ One JSON file per match, from the point of view of one player:
 
 ```json
 {
+  "schema": 2,
   "match_id": "m1",
   "map": "de_mirage",
   "date": "2026-11-09",
@@ -26,7 +27,9 @@ One JSON file per match, from the point of view of one player:
           "victim_side": "T",
           "place": "PalaceInterior",
           "pos": [x, y, z],
-          "victim_teammates_alive": [[x, y, z], ...]
+          "victim_teammates_alive": [[x, y, z], ...],
+          "player_pos": [x, y, z],
+          "player_place": "Jungle"
         }
       ]
     }
@@ -38,6 +41,11 @@ One JSON file per match, from the point of view of one player:
 - `t` is seconds since freeze time ended.
 - `place` is the callout name the demo stores for the victim's position.
 - `victim_teammates_alive` are positions of the victim's living teammates at the kill tick.
+- `player_pos` / `player_place` (schema 2) are the analysed player's own position and callout at
+  the kill tick. Both are `null` when the player is dead or is the victim. Files without
+  `schema` are version 1 and have neither field; detectors that need them see no events and no
+  comparison rounds in those matches. `publish.py` parses a version 1 match again while its
+  demo is still on disk.
 
 ## 2. Detector: isolated_opening_death
 
@@ -80,6 +88,37 @@ One JSON file per match, from the point of view of one player:
   enemy. Own count = victim + `victim_teammates_alive` (exact). Enemy count = 5 minus enemy deaths
   earlier in the round (a short-handed enemy is overcounted). Same-instant kills are not earlier.
 
+## 2d. Detector: missed_trade
+
+- **Chance to trade (per teammate death):** a teammate dies to an enemy while the player is
+  alive within `TRADE_RANGE` (900 units, the same distance as `ISOLATION_DISTANCE`) of the
+  teammate, the team is not outnumbered (2c), and the player survives the next `TRADE_WINDOW`
+  (5 s). A player who dies inside the window was caught in the same fight; that is not this habit.
+- **Trigger (per round):** the first chance in the round where nobody on the team traded the
+  teammate (2c). A trade by any teammate clears it: the team got the kill back.
+- **Grouping:** by (map, side, the *player's* place when the teammate died). Event time is the
+  teammate's death.
+- **Minimum sample / metric:** same as section 2.
+- **Impact score:** same formula; the comparison is the other rounds with at least one chance
+  to trade (like for like).
+- **Known weakness (16 Nov 2026):** on 14 pro Mirage maps it fired in 55-67% of chance rounds,
+  so 900 units is a generous "could have traded" and the trigger is a weak discriminator. It
+  does not check line of sight, or whether the player tried and missed.
+
+## 2e. Detector: repeek_death
+
+- **Trigger (per round):** the player gets an enemy kill, then dies to an enemy within
+  `REPEEK_WINDOW` (5 s) and within `REPEEK_DISTANCE` (250 units) of where they stood when they
+  got the kill. Uses the latest such kill. Excluded: deaths to world/team, deaths while the
+  team is outnumbered (2c), kills where the player's position is unknown.
+- **Grouping:** by (map, side, the player's place at the kill). Event time is the kill.
+- **Minimum sample / metric:** same as section 2.
+- **Impact score:** same formula; the comparison is the other rounds where the player got a kill
+  and later died, not outnumbered (like for like).
+- **Known weakness (16 Nov 2026):** it measures "did not move", not "peeked again": the demo
+  data used has no view direction. On pro data the fired rounds were not lost more often than
+  the comparison rounds (a round with a kill in it is already a better round).
+
 ## 3. Ranking and output
 
 Per map-side cell, exactly one card:
@@ -121,5 +160,5 @@ Given a fix card and newer matches: `fixed` (rate <= target), `improving` (rate 
 
 - Demo parser adapter (`parse_demo.py`, demoparser2) is tested only against one public HLTV demo kept outside git (`tests/test_parse_demo.py`).
 - LLM write-up step. Cards currently use the templates directly.
-- More detectors. Benchmarks from a demo corpus.
+- More detectors (backlog: docs/DETECTOR_IDEAS.md). Benchmarks from a demo corpus.
 - Any UI.

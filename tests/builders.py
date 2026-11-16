@@ -10,11 +10,14 @@ def other(side):
 
 
 def death(t=20.0, victim=ME, attacker=ENEMY, side="T", place="Palace", mates=FAR,
-          attacker_side=None):
-    """`side` is the victim's side; the attacker is on the other side unless given."""
+          attacker_side=None, pos=(0, 0, 0), me_pos=None, me_place=None):
+    """`side` is the victim's side; the attacker is on the other side unless given.
+    `me_pos` / `me_place`: where the analysed player stood at this kill (None = not known)."""
     return {"t": t, "attacker": attacker, "victim": victim, "victim_side": side,
             "attacker_side": attacker_side or other(side),
-            "place": place, "pos": [0, 0, 0], "victim_teammates_alive": mates}
+            "place": place, "pos": list(pos), "victim_teammates_alive": mates,
+            "player_pos": list(me_pos) if me_pos is not None else None,
+            "player_place": me_place}
 
 
 def rnd(num, side="T", won=True, kills=()):

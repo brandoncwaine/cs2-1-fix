@@ -4,9 +4,9 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 
 ## What exists
 - `models.py`: normalised match schema. `parse_demo.py`: .dem -> that schema via demoparser2.
-- Detectors: `isolated_opening_death`, `untraded_death`. `cards.py`: one card per map-side, re-check.
+- Detectors: `isolated_opening_death`, `untraded_death`, `missed_trade`, `repeek_death`. `cards.py`: one card per map-side, re-check.
 - Confidence gate (SPEC 3a): one-sided Fisher exact test, Bonferroni over patterns tested per cell.
-- 53 tests pass. 46 on synthetic data (`tests/builders.py`); 7 parser tests on a public HLTV
+- 86 tests pass. 78 on synthetic data (`tests/builders.py`); 8 parser tests on a public HLTV
   demo kept outside git (`tests/test_parse_demo.py`, skipped if the demo is missing).
 - Environment: system Python is 3.9, too old. Use the project venv (Python 3.12, gitignored):
   `.venv/bin/python -m pytest`. `demoparser2` is installed there too.
@@ -46,6 +46,24 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 - `isolated_opening_death`: 1-16 events per player in 335 rounds.
 - Product implication: even 14 maps on one map gives no card with the current detectors.
   Sharper triggers (bigger effect per event) are the fix, not a looser gate.
+
+## Two new detectors on real data (16 Nov 2026, match files re-parsed as schema 2)
+- `missed_trade` (SPEC 2d) and `repeek_death` (SPEC 2e) needed the player's own position at each
+  kill, so the match format is now schema 2. Old parsed matches are parsed again on the next
+  sync while their demo is on disk (on Railway: all of them, demos are never deleted).
+- Still no card for anyone: Brandon (4 Mirage maps, 81 rounds) or the 5 MOUZ players (14 maps).
+- `missed_trade`: fires in 55-67% of the rounds with a chance to trade, pros included, so
+  "within 900 units" is too generous to mean "should have traded". Summed over all places it
+  does track losing for some players (torzsi 38/91 won vs 33/47; pr 21/57 vs 22/31), but split
+  by place the samples are small. Brandon: 18 fired (10 won) vs 16 other (11 won).
+- `repeek_death`: 11-41 events per pro in 335 rounds; Brandon 3 in 81. No sign it costs rounds
+  (xertioN won 20 of 24). Not moving after a kill is not obviously a mistake at pro level;
+  unknown at lower ranks.
+- Cost of adding detectors: more patterns reach the minimum sample, so the Bonferroni threshold
+  tightens. MOUZ cells now have 4-12 patterns tested (thresholds 0.004-0.0125), up from 3-9 in
+  the first run. Two weak detectors make a card less likely, not more.
+  Open decision: keep both in `cards.DETECTORS`, or hold weak ones back until target-skill data
+  shows they separate won and lost rounds.
 
 ## Known problems, in priority order
 1. Data mismatch: detectors are only checked on pro demos and Brandon's 4 matches. The buyers

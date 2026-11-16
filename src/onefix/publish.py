@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Callable
 
 from onefix.cards import build_cards
-from onefix.models import load_match
+from onefix.models import SCHEMA, load_match
 
 DATA_FILE = "data.json"
 
@@ -31,13 +31,22 @@ def run_parser(demo: Path, steamid: str, out_dir: Path) -> bool:
     return done.returncode == 0
 
 
+def _current(parsed: Path) -> bool:
+    """A parsed match exists in the current format. Older files are parsed again while their
+    demo is still on disk, so new detectors get the fields they need."""
+    try:
+        return json.loads(parsed.read_text()).get("schema", 1) >= SCHEMA
+    except (OSError, ValueError):
+        return False
+
+
 def publish_player(player: dict, parsed_dir: Path, parse: Callable[[Path, str, Path], bool]) -> dict:
     steamid = player["steamid"]
     out_dir = parsed_dir / steamid
     out_dir.mkdir(parents=True, exist_ok=True)
     parse_failed = 0
     for demo in sorted(Path(d) for d in player.get("demos", [])):
-        if (out_dir / f"{demo.stem}.json").exists():
+        if _current(out_dir / f"{demo.stem}.json"):
             continue
         if not parse(demo, steamid, out_dir):
             parse_failed += 1
