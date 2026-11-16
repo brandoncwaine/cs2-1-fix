@@ -17,12 +17,17 @@ Post-match tool: ONE prioritised fix per map and side (evidence, drill, metric),
 - CLI: `PYTHONPATH=src python -m onefix.cli --steamid <id> fixtures/*.json`
 - Parse demos: `PYTHONPATH=src python -m onefix.parse_demo --steamid <id> --out parsed demos/*.dem`
 - Never commit `.dem` files or `parsed/` output: they contain other players' Steam IDs.
+- `ingest/` is a separate Node 20+ package (steam-user, globaloffensive): `npm test` there.
+  Its secrets live in `~/.config/onefix/`, never in the repo. Full run: `scripts/sync.sh`.
+- Never type, store or log anyone's Steam password. The bot's first login is run by the user.
 
 ## Layout
 - `src/onefix/models.py`   normalised match schema (parser-independent)
 - `src/onefix/parse_demo.py` .dem -> normalised match JSON (tests need a real demo; see tests/test_parse_demo.py)
 - `src/onefix/detectors/`  one file per detector (`isolated_opening_death`, `untraded_death`); shared trade rules in `common.py`
 - `src/onefix/cards.py`    ranking, thin-data refusal, card JSON, re-check
+- `ingest/`                share codes -> bot account -> game coordinator -> demo download (see ingest/README.md)
+- `scripts/sync.sh`        fetch new demos, parse, print cards
 - `SPEC.md`                detector catalogue and formats
 
 ## Glossary

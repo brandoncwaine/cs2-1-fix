@@ -5,3 +5,6 @@ __pycache__/
 parsed/
 .venv/
 docs/LOCAL.md
+node_modules/
+*.part
+*.dem.bz2

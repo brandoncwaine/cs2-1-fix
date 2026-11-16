@@ -50,8 +50,8 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 ## Known problems, in priority order
 1. Data mismatch: detectors are only checked on pro demos and Brandon's 4 matches. The buyers
    are lower-skill players; their patterns, base rates and thresholds are unmeasured.
-2. D3 risk (not re-argued, flagged): one fix per map *and side* needs ~15 maps of one map even
-   at 300+ rounds. Casual players spread across maps. Worth a deliberate decision.
+2. D3 needs ~15 maps of one map per player for a card. Brandon reaffirmed per-map (16 Nov), so
+   the answer is automatic ingestion (D7) to get volume, plus sharper detectors.
 3. All thresholds are unvalidated guesses (900 units, 5 s trade window, target = half baseline,
    ALPHA = 0.05). The gate treats rounds as independent, which they are not.
 4. `rounds_cost` uses a different comparison set per detector, so cross-detector ranking is approximate.
@@ -66,6 +66,8 @@ Fixed: both detectors now share the enemy-kill and trade rules (`detectors/commo
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Suggested next steps
+- Finish ingestion setup (ingest/README.md): API key, auth code, bot login. Then run
+  `scripts/sync.sh` and check the first downloaded demo's name matches a client download.
 - Stop using pro demos to judge detectors (keep them for parser tests). Get target-skill data:
   Brandon's ongoing matches plus 3-5 friends at his level, 15-20 matches each, and ask each
   player whether their card is right. That is both validation data and customer research.

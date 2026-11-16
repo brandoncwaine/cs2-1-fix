@@ -20,6 +20,12 @@ Changes to it are explicit, logged updates here.
 ## D6 — Player-facing product only; no coach copilot (2026-11-13)
 Coaches may be used as research labellers for detector output, but are not customers.
 
+## D7 — Ingestion: share codes + a Steam bot account (2026-11-16)
+Demos are fetched automatically: Steam's match-history API gives the player's share codes, a separate bot Steam account asks the CS2 game coordinator for each demo URL, and the demo is downloaded from Valve's replay servers. Brandon's call: manual download is too much friction for the product to work. Steam's terms for bot accounts are still unchecked; the risk falls on the bot account, never a user's main account. Built in `ingest/` (Node, because the maintained game-coordinator libraries are Node).
+
+## D3 reaffirmed (2026-11-16)
+Kept one fix per map and side after the pro-demo results showed it needs ~15 maps of one map per player. Not to be revisited without a new entry.
+
 ## Open (not decided)
-- Ingestion: Premier auto-import via share codes + a Steam bot account (Steam terms unchecked) vs manual upload. FACEIT auto-import looks unlikely.
+- Check Steam's terms on bot accounts (D7). FACEIT auto-import looks unlikely.
 - Benchmarks from a rank-matched or pro demo corpus as a v2 evidence base (source and licensing unresearched).
