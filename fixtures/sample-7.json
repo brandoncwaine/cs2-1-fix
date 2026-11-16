@@ -1,7 +1,7 @@
 {
  "match_id": "sample-7",
  "map": "de_inferno",
- "date": "2026-11-13",
+ "date": "2026-11-03",
  "rounds": [
   {
    "num": 1,
@@ -286,7 +286,7 @@
      "victim": "me",
      "victim_side": "CT",
      "attacker_side": "T",
-     "place": "BombsiteB",
+     "place": "Banana",
      "pos": [
       0,
       0,
@@ -329,20 +329,14 @@
    "num": 17,
    "side": "CT",
    "won": true,
-   "kills": []
-  },
-  {
-   "num": 18,
-   "side": "CT",
-   "won": false,
    "kills": [
     {
-     "t": 41.2,
+     "t": 27.3,
      "attacker": "enemy",
      "victim": "me",
      "victim_side": "CT",
      "attacker_side": "T",
-     "place": "Jungle",
+     "place": "Stairs",
      "pos": [
       0,
       0,
@@ -374,12 +368,12 @@
      "player_place": null
     },
     {
-     "t": 43.0,
+     "t": 29.1,
      "attacker": "mate",
      "victim": "enemy",
      "victim_side": "T",
      "attacker_side": "CT",
-     "place": "Jungle",
+     "place": "Stairs",
      "pos": [
       0,
       0,
@@ -413,6 +407,12 @@
    ]
   },
   {
+   "num": 18,
+   "side": "CT",
+   "won": true,
+   "kills": []
+  },
+  {
    "num": 19,
    "side": "CT",
    "won": false,
@@ -427,13 +427,88 @@
   {
    "num": 21,
    "side": "CT",
-   "won": true,
-   "kills": []
+   "won": false,
+   "kills": [
+    {
+     "t": 19.5,
+     "attacker": "enemy",
+     "victim": "me",
+     "victim_side": "CT",
+     "attacker_side": "T",
+     "place": "Connector",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       350,
+       120,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    },
+    {
+     "t": 21.3,
+     "attacker": "mate",
+     "victim": "enemy",
+     "victim_side": "T",
+     "attacker_side": "CT",
+     "place": "Connector",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "victim_teammates_alive": [
+      [
+       2400,
+       300,
+       0
+      ],
+      [
+       2600,
+       -500,
+       0
+      ],
+      [
+       3100,
+       900,
+       0
+      ],
+      [
+       3300,
+       100,
+       0
+      ]
+     ],
+     "player_pos": null,
+     "player_place": null
+    }
+   ]
   },
   {
    "num": 22,
    "side": "CT",
-   "won": false,
+   "won": true,
    "kills": []
   },
   {

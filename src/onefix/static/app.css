@@ -88,9 +88,7 @@ a.button { display: block; padding: 11px; text-align: center; text-decoration: n
 .notice.good { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent-soft); }
 .empty { margin-top: 24px; padding: 32px 20px; border: 1px dashed var(--line); border-radius: 16px; text-align: center; }
 
-.map { margin-top: 28px; }
-.map-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
-.map-head h2 { font-size: 20px; letter-spacing: -0.01em; }
+.map { margin-top: 20px; }
 .cells { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; align-items: start; }
 
 .card {
@@ -99,7 +97,27 @@ a.button { display: block; padding: 11px; text-align: center; text-decoration: n
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .card.fix { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), transparent 140px), var(--panel); }
-.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+/* Map banner: the map's picture from static/maps/ under a dark scrim, so the name stays readable. */
+.mapcard { padding: 0; overflow: hidden; }
+.card.fix.mapcard { background: var(--panel); }
+.map-art {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 132px; padding: 14px 18px; color: #fff;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.72)), var(--map-image, none) center / cover, #2a2d34;
+}
+.map-art b { display: block; font-size: 24px; line-height: 1.1; letter-spacing: -0.02em; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+.map-art .rounds { color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7); }
+.map-art .side, .map-art .side.T, .map-art .side.CT { background: rgba(0, 0, 0, 0.6); }
+.map-art .side.T { color: #f0b958; }
+.map-art .side.CT { color: #9dbcf8; }
+.mapcard-body { padding: 16px 18px 18px; }
+.map-ancient { --map-image: url(/static/maps/ancient.jpg); }
+.map-anubis { --map-image: url(/static/maps/anubis.jpg); }
+.map-dust2 { --map-image: url(/static/maps/dust2.jpg); }
+.map-inferno { --map-image: url(/static/maps/inferno.jpg); }
+.map-mirage { --map-image: url(/static/maps/mirage.jpg); }
+.map-nuke { --map-image: url(/static/maps/nuke.jpg); }
+.map-overpass { --map-image: url(/static/maps/overpass.jpg); }
+.map-vertigo { --map-image: url(/static/maps/vertigo.jpg); }
 .side { padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; }
 .side.T { background: var(--t-bg); color: var(--t); }
 .side.CT { background: var(--ct-bg); color: var(--ct); }
@@ -195,19 +213,6 @@ dialog.modal.closing::backdrop { animation: fade-out 0.16s ease both; }
   content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 999px;
   background: var(--text); color: var(--bg); font-size: 14px; font-weight: 700; line-height: 28px; text-align: center;
 }
-/* Sample cards with a map banner: a picture from static/maps/ under a dark scrim, so the name stays readable. */
-.mapcard { padding: 0; overflow: hidden; }
-.map-art {
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 132px; padding: 14px 18px; color: #fff;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.7)), var(--map-image) center / cover, #2a2d34;
-}
-.map-art b { font-size: 24px; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
-.map-art .side { background: rgba(0, 0, 0, 0.55); color: #fff; }
-.map-mirage { --map-image: url(/static/maps/mirage.jpg); }
-.map-inferno { --map-image: url(/static/maps/inferno.jpg); }
-.mapcard-body { padding: 16px 18px 18px; }
-.mapcard .progress { margin-top: 14px; }
-.states .progress > div { width: 40%; }
 .states { margin-top: 20px; }
 .states + p { margin-top: 10px; }
 /* Questions: the whole row is the click target; the answer slides open where the browser supports it. */

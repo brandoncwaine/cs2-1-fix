@@ -7,7 +7,9 @@ Everything is spelled out below, so the output is the same on every run. The mat
 shaped to show all three card states with believable numbers:
   de_mirage T   fix (dying first and alone at Palace: a few rounds, most but not all lost)
   de_mirage CT  no fix found (a pattern repeats, but not strongly enough to pass the gate)
-  de_inferno    not enough rounds yet (one match)
+  de_inferno CT fix (dying untraded at Banana)
+  de_inferno T  no fix found
+  de_nuke       not enough rounds yet (one match)
 The sign-in page's sample cards (src/onefix/static/login.html) are copied from this output.
 """
 from __future__ import annotations
@@ -27,7 +29,8 @@ NEAR = [[350, 120, 0], [2600, -500, 0], [3100, 900, 0], [3300, 100, 0]]
 #   p    died first and alone at the pattern place, untraded
 #   t    died with a teammate close, and was traded
 #   u    died elsewhere with a teammate close, but was not traded
-# p, t and u are lost rounds; in upper case (P, T, U) the round was won anyway.
+#   x    died at the pattern place with a teammate close, but was not traded
+# p, t, u and x are lost rounds; in upper case (P, T, U, X) the round was won anyway.
 # (match id, map, date, T half, CT half, pattern place on T, pattern place on CT)
 MATCHES = [
     ("sample-1", "de_mirage", "2026-11-02", "WWpLtWuLWWWt", "LWWuTWWLWpLW", "Palace", "BombsiteA"),
@@ -36,7 +39,13 @@ MATCHES = [
     ("sample-4", "de_mirage", "2026-11-08", "WWpLTWWPLuWW", "WLWpWtLWWuLW", "Palace", "BombsiteA"),
     ("sample-5", "de_mirage", "2026-11-09", "LtWpWWWuLWpW", "WWTLpWuLWWLW", "Palace", "BombsiteA"),
     ("sample-6", "de_mirage", "2026-11-12", "WpLWWtLWWuLW", "LWWtWPLWuWLW", "Palace", "BombsiteA"),
-    ("sample-7", "de_inferno", "2026-11-13", "WWtLWuLWWLtW", "LWuWWtLWWLWL", "Banana", "BombsiteB"),
+    ("sample-7", "de_inferno", "2026-11-03", "WWtLWuLWWLtW", "LWxWTWLWtWWL", "Banana", "Banana"),
+    ("sample-8", "de_inferno", "2026-11-06", "LWWtWLWuWWLW", "WxLWWTWLLWTW", "Banana", "Banana"),
+    ("sample-9", "de_inferno", "2026-11-07", "WLWWuLtWWLWW", "TWWLxWWtLWWU", "Banana", "Banana"),
+    ("sample-10", "de_inferno", "2026-11-10", "WWLtWWLWuLWW", "WLTWWxLWWTWL", "Banana", "Banana"),
+    ("sample-11", "de_inferno", "2026-11-11", "LWtWWLWWLuWW", "WWXLTWWLxWtW", "Banana", "Banana"),
+    ("sample-12", "de_inferno", "2026-11-14", "WuLWWtWLWWLW", "LTWLWWLTWWuW", "Banana", "Banana"),
+    ("sample-13", "de_nuke", "2026-11-15", "WWtLWuLWWLtW", "LWuWWtLWWLWL", "Outside", "Heaven"),
 ]
 
 # Where and when the non-pattern deaths happen: cycled through, so no place repeats enough
@@ -68,12 +77,12 @@ def build_half(letters: str, side: str, first_num: int, pattern_place: str, coun
         kills = []
         if what == "p":
             kills.append(kill(t, ENEMY, ME, side, pattern_place, FAR))
-        elif what in "tu":
-            place = ELSEWHERE[side][n % len(ELSEWHERE[side])]
+        elif what in "tux":
+            place = pattern_place if what == "x" else ELSEWHERE[side][n % len(ELSEWHERE[side])]
             kills.append(kill(t, ENEMY, ME, side, place, NEAR))
             if what == "t":
                 kills.append(kill(round(t + 1.8, 1), MATE, ENEMY, other(side), place, FAR))
-        won = letter in "WPTU"
+        won = letter in "WPTUX"
         rounds.append({"num": first_num + i, "side": side, "won": won, "kills": kills})
     return rounds
 

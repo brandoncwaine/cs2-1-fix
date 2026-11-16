@@ -2,8 +2,10 @@
 'use strict';
 
 const DETECTOR_TITLES = {
-  untraded_death: 'Untraded deaths',
-  isolated_opening_death: 'Isolated opening deaths',
+  untraded_death: 'Dying untraded',
+  isolated_opening_death: 'Dying first and alone',
+  missed_trade: 'Missed trades',
+  repeek_death: 'Re-peeking after a kill',
 };
 const POLL_MS = 5000;
 
@@ -39,15 +41,21 @@ function syncedText(iso) {
   return `Updated ${d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
 }
 
-function cardHead(card) {
-  const head = el('div', 'card-head');
-  head.append(el('span', `side ${card.side}`, `${card.side} side`), el('span', 'rounds', plural(card.side_rounds, 'round')));
-  return head;
+// A card: a banner with the map's picture, name and side, then the body the caller fills in.
+// The picture comes from the class map-<name> in app.css; a map without one gets a plain banner.
+function cardShell(card, extra = '') {
+  const box = el('article', `card mapcard map-${mapName(card.map).toLowerCase().replace(/[^a-z0-9]/g, '')} ${extra}`.trim());
+  const art = el('div', 'map-art');
+  const name = el('div');
+  name.append(el('b', '', mapName(card.map)), el('span', 'rounds', plural(card.side_rounds, 'round')));
+  art.append(name, el('span', `side ${card.side}`, `${card.side} side`));
+  const body = el('div', 'mapcard-body');
+  box.append(art, body);
+  return { box, body };
 }
 
 function fixCard(card) {
-  const box = el('article', 'card fix');
-  box.append(cardHead(card));
+  const { box: shell, body: box } = cardShell(card, 'fix');
   box.append(el('h3', '', `${DETECTOR_TITLES[card.detector] || card.detector} at ${placeName(card.place)}`));
   box.append(el('p', 'lead', card.fix_text));
 
@@ -87,12 +95,11 @@ function fixCard(card) {
   for (const [k, v] of rows) dl.append(el('dt', '', k), el('dd', '', v));
   details.append(dl, el('p', 'note', s.note));
   box.append(details);
-  return box;
+  return shell;
 }
 
 function thinCard(card) {
-  const box = el('article', 'card');
-  box.append(cardHead(card));
+  const { box: shell, body: box } = cardShell(card);
   box.append(el('h3', '', 'Not enough rounds yet'));
   const need = card.side_rounds + card.rounds_needed;
   box.append(el('p', 'reason', `${plural(card.rounds_needed, 'more round')} needed before this side is analysed (${card.side_rounds} of ${need}).`));
@@ -105,15 +112,14 @@ function thinCard(card) {
   fill.style.width = `${Math.round((100 * card.side_rounds) / need)}%`;
   bar.append(fill);
   box.append(bar);
-  return box;
+  return shell;
 }
 
 function noFixCard(card) {
-  const box = el('article', 'card');
-  box.append(cardHead(card));
+  const { box: shell, body: box } = cardShell(card);
   box.append(el('h3', '', 'No fix found'));
   box.append(el('p', 'reason', card.reason));
-  return box;
+  return shell;
 }
 
 function renderCard(card) {
@@ -158,8 +164,8 @@ function renderPlayer(player, main) {
   });
   for (const [map, cards] of ordered) {
     const section = el('section', 'map');
-    const head = el('div', 'map-head');
-    head.append(el('h2', '', mapName(map)), el('span', 'muted', plural(cards.reduce((n, c) => n + c.side_rounds, 0), 'round')));
+    // Each card's banner shows the map, so the heading is only for screen readers.
+    const head = el('h2', 'visually-hidden', mapName(map));
     const cells = el('div', 'cells');
     for (const side of ['T', 'CT']) {
       const card = cards.find((c) => c.side === side);
