@@ -32,11 +32,27 @@ Read this with CLAUDE.md, SPEC.md and DECISIONS.md before changing anything.
 - `untraded_death` fires on 50-72% of deaths for pros too: confirms it is a weak discriminator.
 - `isolated_opening_death`: 0-3 events per player in 76 rounds. Rare in pro play as well.
 
+## What 14 MOUZ Mirage maps showed (HLTV, 2026 events, 335 rounds per player, 16 Nov 2026)
+- Same 5 players in all 14 maps. Parser correct on all: every map gives a valid score (incl.
+  16-14 and 19-16 overtimes). One demo has no junk `round_end`; handled.
+- Still no card for any player. 3-9 patterns tested per cell, so thresholds are 0.0056-0.0167.
+  Closest: xertioN CT untraded at BombsiteB, 0/6 vs 50/90, p = 0.0101 vs 0.01 needed.
+- Main finding: of 679 untraded deaths (all 5 players), 244 happened when the player's team was
+  already outnumbered; those rounds were won 3% of the time, vs 45% for the rest. These deaths
+  mostly reflect a lost round, not a habit, and they add noise. Several near-misses are
+  dominated by them (late bombsite deaths at 2v3, 3v5).
+- Exception: xertioN T untraded at TopofMid (0/9, p = 0.040) is mostly 5v5 deaths at 8-15 s:
+  the shape of a real early-round habit.
+- `isolated_opening_death`: 1-16 events per player in 335 rounds.
+- Product implication: even 14 maps on one map gives no card with the current detectors.
+  Sharper triggers (bigger effect per event) are the fix, not a looser gate.
+
 ## Known problems, in priority order
 1. All thresholds are unvalidated guesses (900 units, 5 s trade window, target = half baseline,
    ALPHA = 0.05). The gate treats rounds as independent, which they are not.
 2. `rounds_cost` uses a different comparison set per detector, so cross-detector ranking is approximate.
-3. `untraded_death` needs better exclusions (e.g. deaths after the round is effectively lost).
+3. `untraded_death` counts deaths when the team is already outnumbered (36% of pro untraded
+   deaths; 3% round win rate). Proposed: exclude them. Not yet decided or built.
 4. Parser: tick rate hard-coded to 64 (checked on one demo, not read from the file); match date
    is empty (sorted by match id in file name); split demos (`-p1`/`-p2`) would load as two matches.
 
@@ -44,8 +60,8 @@ Fixed: both detectors now share the enemy-kill and trade rules (`detectors/commo
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Suggested next steps
-- Get more demos on one map for one player: 4 matches cannot produce a card that passes the gate.
-  Needs HLTV downloads by hand (about 12-15 maps of one team on one map).
+- Decide on the outnumbered exclusion for `untraded_death` (problem 3), then re-run on MOUZ.
+  Risk: the idea came from this data, so check it on a second team before trusting it.
 - Do not tune thresholds or ALPHA to make cards appear on this small sample.
 
 ## Local data
