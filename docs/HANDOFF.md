@@ -66,8 +66,9 @@ Fixed: both detectors now share the enemy-kill and trade rules (`detectors/commo
 A trade must be made by the victim's team. No change in counts on the 4 real demos.
 
 ## Suggested next steps
-- Finish ingestion setup (ingest/README.md): API key, auth code, bot login. Then run
-  `scripts/sync.sh` and check the first downloaded demo's name matches a client download.
+- Ingestion works end to end (16 Nov 2026): share code -> bot -> GC -> 199 MB demo, named like
+  client downloads, parsed, cards printed. Run `scripts/sync.sh` at least weekly (Valve deletes
+  demos after a few weeks); a schedule (launchd) is the next small step.
 - Stop using pro demos to judge detectors (keep them for parser tests). Get target-skill data:
   Brandon's ongoing matches plus 3-5 friends at his level, 15-20 matches each, and ask each
   player whether their card is right. That is both validation data and customer research.

@@ -65,7 +65,9 @@ export function demoFileName(url) {
   return `match730_${reservation}_${port}_${server}.dem`;
 }
 
-/** Reservation id and TV port as they appear in a client demo file name. */
+/** Reservation id and TV port as they appear in a client demo file name.
+ *  Note: a share code's tvPort is only the low 16 bits of this port (checked on a real match),
+ *  so compare share codes to files by reservationId, or by `tvPort & 0xFFFF`. */
 export function idsFromFileName(name) {
   const m = /^match730_(\d+)_(\d+)_\d+\.dem$/.exec(name);
   return m ? { reservationId: String(BigInt(m[1])), tvPort: Number(m[2]) } : null;
